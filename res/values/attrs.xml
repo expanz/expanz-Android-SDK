@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ButtonEx">
+    	<attr name="context_object" format="string" />
+    	<attr name="method_name" format="string" />
+	</declare-styleable>
+	<declare-styleable name="ImageCaptureEx">
+    	<attr name="file" format="string" />
+    	<attr name="type" format="string" />
+    	<attr name="quality" format="integer" />
+    	<attr name="scale" format="float" />
+    	<attr name="auto_save_method" format="string" />
+    	<attr name="assoc_field_id" format="string" />
+	</declare-styleable>
+	<declare-styleable name="TextViewEx">
+    	<attr name="use_value" format="boolean" />
+	</declare-styleable>
+	<declare-styleable name="BaseViewEx">
+		<attr name="batch_mode" format="boolean" />
+		<attr name="field_id" format="string" />
+    	<attr name="activity_name" format="string" />
+    	<attr name="activity_style" format="string" />
+	</declare-styleable>
+	<declare-styleable name="DefaultLoginEx">
+		<attr name="login_title" format="string" />
+	</declare-styleable>
+</resources>
+

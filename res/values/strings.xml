@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<string name="expanz_site"></string>
+    <string name="expanz_auth_domain"></string>
+    <string name="expanz_auth_mode">Primary</string>
+    <string name="expanz_namespace">http://www.expanz.com/ESAService</string>
+  	<string name="expanz_default_session_url"></string>
+    <string name="expanz_default_exec_url"></string>
+ 
+    <string name="expanz_client_type">Android</string>
+    <string name="expanz_client_version">Android 1.0</string>
+    <string name="expanz_schema_version">2.0</string>
+    <string name="expanz_timezone"></string>
+    <string name="expanz_station"></string>
+
+	<string name="login_default">Please login</string>
+    
+</resources>
