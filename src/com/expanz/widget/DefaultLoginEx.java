@@ -28,23 +28,61 @@ import com.expanz.model.Message;
 import com.expanz.model.response.SessionResponse;
 import com.expanz.util.ActivityMappingHolder;
 
+/**
+ * A composite widget that contains all the necessary widgets
+ * to allow users to log in to an application. 
+ *
+ */
 public class DefaultLoginEx extends TableLayout {
 
+	/**
+	 * Shows progress of login request
+	 */
 	private ProgressBar progress;
+	
+	/**
+	 * To capture username
+	 */
 	private EditText usernameEdit;
+	
+	/**
+	 * To capture password
+	 */
 	private EditText passwordEdit;
+	
+	/**
+	 * To capture guest check
+	 */
 	private CheckBox guestCheck; 
 	
+	/**
+	 * Ctor.
+	 * 
+	 * @param context the activity
+	 */
 	public DefaultLoginEx(Context context) {
 		super(context);
 		throw new RuntimeException("must define attributes");
 	}
 
+	/**
+	 * Ctor.
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	public DefaultLoginEx(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		layout(context, attrs);
 	}
 
+	/**
+	 * Ctor.
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 * @param defStyle the definition style
+	 */
 	private void layout(Context context, AttributeSet attrs) {
 		
 		LayoutParams parentParams = new TableLayout.LayoutParams(
@@ -64,6 +102,12 @@ public class DefaultLoginEx extends TableLayout {
 		
 	}
 
+	/**
+	 * Add the progress bar to the widget
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	private void addProgress(Context context, AttributeSet attrs) {
 		
 		TableRow progressRow = new TableRow(context, attrs);
@@ -93,6 +137,12 @@ public class DefaultLoginEx extends TableLayout {
 		
 	}
 
+	/**
+	 * Add the logo to the widget
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	private void addLogo(Context context, AttributeSet attrs) {
 		
 		TableRow logoRow = new TableRow(context, attrs);
@@ -120,6 +170,12 @@ public class DefaultLoginEx extends TableLayout {
 		
 	}
 
+	/**
+	 * Add the username to the widget
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	private void addUsername(Context context, AttributeSet attrs) {
 		
 		TableRow userRow = new TableRow(context, attrs);
@@ -157,6 +213,12 @@ public class DefaultLoginEx extends TableLayout {
 		addView(userRow);
 	}
 
+	/**
+	 * Add the password to the widget
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	private void addPassword(Context context, AttributeSet attrs) {
 		
 		TableRow passRow = new TableRow(context, attrs);
@@ -197,6 +259,12 @@ public class DefaultLoginEx extends TableLayout {
 		addView(passRow);
 	}
 	
+	/**
+	 * Add the guest checkbox to the widget
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	private void addGuestCheck(Context context, AttributeSet attrs) {
 		
 		TableRow guestRow = new TableRow(context, attrs);
@@ -253,6 +321,12 @@ public class DefaultLoginEx extends TableLayout {
 		addView(guestRow);
 	}
 
+	/**
+	 * Add the login button to the widget
+	 * 
+	 * @param context the activity
+	 * @param attrs values defined in attr.xml
+	 */
 	private void addButton(final Context context, AttributeSet attrs) {
 		
 		TableRow buttonRow = new TableRow(context, attrs);
