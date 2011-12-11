@@ -22,26 +22,59 @@ import android.net.Uri;
  */
 public class DefaultContentProvider extends ContentProvider {
 
+	/**
+	 * Helper used for creation and updating of the database schema
+	 */
 	private DatabaseHelper dbHelper;
 
+	/**
+	 * Authority for database 
+	 */
 	public static final String AUTHORITY = "com.expanz.providers.defaultcontentprovider";
 
+	/**
+	 * Name of the database
+	 */
 	private static final String DATABASE_NAME = "ExpanzService.db";
 
+	/**
+	 * Current Version of the database
+	 */
 	private static final int DATABASE_VERSION = 1;
 
+	/**
+	 * Activity table name
+	 */
 	public static final String ACTIVITY_TABLE = "activity";
 
+	/**
+	 * Session table name
+	 */
 	public static final String SESSION_TABLE = "session";
 
+	/**
+	 * URI matcher for authority to table mapping
+	 */
 	private static final UriMatcher sUriMatcher;
 
+	/**
+	 * Identifier for all Activities operation
+	 */
 	private static final int ACTIVIES = 1;
 
+	/**
+	 * Identifier for all Sessions operation
+	 */
 	private static final int SESSIONS = 2;
 	
+	/**
+	 * Identifier for single Activity operation
+	 */
 	private static final int ACTIVITY = 3;
 	
+	/**
+	 * Identifier for single session operation
+	 */
 	private static final int SESSION = 4;
 
 	static {
@@ -54,12 +87,23 @@ public class DefaultContentProvider extends ContentProvider {
 
 	}
 
+	/**
+	 * Static class for database schema creation and update
+	 */
 	private static class DatabaseHelper extends SQLiteOpenHelper {
 
+		/**
+		 * Ctor.
+		 * 
+		 * @param context the current context (activity/application) 
+		 */
 		DatabaseHelper(Context context) {
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 
@@ -72,6 +116,9 @@ public class DefaultContentProvider extends ContentProvider {
 					+ "( _id INTEGER PRIMARY KEY AUTOINCREMENT, SESSION_HANDLE TEXT, PAYLOAD TEXT);");
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			db.execSQL("DROP TABLE IF EXISTS " + ACTIVITY_TABLE);
@@ -80,6 +127,9 @@ public class DefaultContentProvider extends ContentProvider {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 
@@ -125,6 +175,9 @@ public class DefaultContentProvider extends ContentProvider {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String getType(Uri uri) {
 
@@ -154,6 +207,9 @@ public class DefaultContentProvider extends ContentProvider {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 
@@ -200,12 +256,18 @@ public class DefaultContentProvider extends ContentProvider {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean onCreate() {
 		dbHelper = new DatabaseHelper(getContext());
 		return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
@@ -261,6 +323,9 @@ public class DefaultContentProvider extends ContentProvider {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
