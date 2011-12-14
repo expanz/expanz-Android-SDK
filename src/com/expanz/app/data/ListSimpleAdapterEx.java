@@ -3,13 +3,13 @@ package com.expanz.app.data;
 import java.util.Map;
 
 import android.app.Activity;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.expanz.ExpanzApplication;
-import com.expanz.app.ListActivityEx;
 import com.expanz.model.response.Data;
 import com.expanz.model.response.DataRow;
 
@@ -41,7 +41,7 @@ public class ListSimpleAdapterEx extends ArrayAdapter<DataRow> {
 	 * @param rowLayoutId the layout file reference
 	 * @param data the data of the List
 	 */
-	public ListSimpleAdapterEx(ListActivityEx context, int rowLayoutId, Data data) {
+	public ListSimpleAdapterEx(Context context, int rowLayoutId, Data data) {
 		super(context,rowLayoutId, data.getRows());
 		mRowLayoutId = rowLayoutId;
 		

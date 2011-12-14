@@ -37,6 +37,7 @@ import com.expanz.model.request.CreateSessionRequest;
 import com.expanz.model.request.DataPublicationRequest;
 import com.expanz.model.request.GetSessionDataRequest;
 import com.expanz.model.response.ActivityResponse;
+import com.expanz.model.response.Data;
 import com.expanz.model.response.FieldResponse;
 import com.expanz.model.response.ProcessAreaActivityResponse;
 import com.expanz.model.response.ProcessAreaResponse;
@@ -48,6 +49,7 @@ import com.expanz.webservice.ActivityHandler;
 import com.expanz.widget.EditTextEx;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.ImageViewEx;
+import com.expanz.widget.ListViewEx;
 import com.expanz.widget.TextViewEx;
 
 /**
@@ -86,12 +88,17 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	/**
 	 * Label for the field widgets, needs to be separate as same field id is used for widget and label
 	 */
-	private Map<String, TextViewEx> fieldLabels = new HashMap<String, TextViewEx>();
+	private Map<String, List<TextViewEx>> fieldLabels = new HashMap<String, List<TextViewEx>>();
 	
 	/**
-	 * any field widget views that exists as a child of the root view for this activity
+	 * Any field widget views that exists as a child of the root view for this activity
 	 */
 	private Map<String, List<ExpanzFieldWidget>> fieldWidgets = new HashMap<String, List<ExpanzFieldWidget>>();
+	
+	/**
+	 * ListViews that are inside the activity's view
+	 */
+	private Map<String, ListViewEx> lists = new HashMap<String, ListViewEx>();
 	
 	/**
 	 * the root view for this activity, need so we can recurse child elements
@@ -113,10 +120,6 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 */
 	private SharedPreferences mPrefs;
 	
-	/**
-	 * the name of the expanz activity, e.g. ESA.Sales.SalesOrder
-	 */
-	private String activityName;
 	
 	/**
 	 * Is this a newly created android activity, used so we don't recreate an 
@@ -158,12 +161,12 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		if(savedInstanceState != null && savedInstanceState.getBoolean(ExpanzConstants.NOT_NEW)) {
 			isNew = false;
 		} 
-		 
+
 		loadMapping();
 
 	}
 	
-	public Map<String, TextViewEx> getFieldLabels() {
+	public Map<String, List<TextViewEx>> getFieldLabels() {
 		return fieldLabels;
 	}
 
@@ -199,7 +202,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		initFields(); 
 		
 		if(mapping.isCreateActivity()) {
-			createActivity(mapping.getExpanzActivityName());
+			createActivity(mapping.getExpanzActivityName(), mapping.getStyle(), mapping.getPublications());
 		}
 		
 	}
@@ -237,7 +240,6 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 */
 	protected ActivityResponse loadActivity(String activityName) {
 		
-		this.activityName = activityName;
 		ActivityResponse activity = null;
 		
 		String activityUriString = getIntent().getStringExtra(ExpanzConstants.TRANSITION_URI);
@@ -286,10 +288,10 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 * 
 	 * @param activityName
 	 * @param style
-	 * @param publication
+	 * @param publications
 	 */
 	protected void createActivity(String activityName, String style,
-			DataPublicationRequest publication) {
+			List<DataPublicationRequest> publications) {
 
 		ActivityResponse activity = null;
 
@@ -300,10 +302,13 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 
 			CreateActivityRequest request = CreateActivityRequest
 					.createWithNameAndStyle(activityName, style, sessionHandle);
-			request.addPublication(publication);
+			
+			for(DataPublicationRequest publication : publications) {
+				request.addPublication(publication);
+			}
+			
 			request.addMediaResourceFields(mediaResourceFields);
 			request.setInitialKey(getIntent().getStringExtra(ExpanzConstants.INIT_KEY));
-			this.activityName = activityName;
 			
 			for(String rowField : includedFields) {
 				request.addField(rowField);
@@ -334,11 +339,13 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		
 		for(FieldResponse field : activity.getFields()) {
 			
-			TextViewEx label = fieldLabels.get(field.getId());
-			
-			if(label != null) {
-				label.setText(label.isUseValue() ? field.getValue() : field.getLabel());
+			if (fieldLabels.get(field.getId()) != null) {
+				for (TextViewEx label : fieldLabels.get(field.getId())) {
+					label.setText(label.isUseValue() ? field.getValue() : field
+							.getLabel());
+				}
 			}
+		
 			
 			List<ExpanzFieldWidget> widgets = fieldWidgets.get(field.getId());
 			
@@ -349,6 +356,16 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 					widget.setField(field);
 				}
 
+			}
+			
+		}
+		
+		for(Data data : activity.getData()) {
+			
+			ListViewEx listView = lists.get(data.getContextObject());
+			
+			if(listView != null) {
+				listView.updateData(data);
 			}
 			
 		}
@@ -505,7 +522,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	protected void initFields() {
 
 		if (rootLayout != null) {
-			recurseChildren(rootLayout);
+			recurseChildren(rootLayout, null);
 		}
 
 	}
@@ -515,7 +532,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 * 
 	 * @param view the parent
 	 */
-	private void recurseChildren(View view) {
+	private void recurseChildren(View view, String contextObject) {
 		
 		if(view == null) {
 			return;
@@ -527,7 +544,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 			
 			if(childCount > 0) {
 				for(int i = 0; i < childCount; i++) {
-					recurseChildren(((ViewGroup) view).getChildAt(i));
+					recurseChildren(((ViewGroup) view).getChildAt(i), contextObject);
 				}
 			}
 			
@@ -547,7 +564,15 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		
 		if (view.getClass().equals(TextViewEx.class)) { //don't get subclasses
 			TextViewEx label = (TextViewEx) view;
-			fieldLabels.put(label.getFieldId(), label);
+			List<TextViewEx> existingLabels = fieldLabels.get(label.getFieldId());
+			
+			if(existingLabels == null) {
+				existingLabels = new ArrayList<TextViewEx>();
+			}
+			
+			existingLabels.add(label);
+			
+			fieldLabels.put(label.getFieldId(), existingLabels);
 		} else if (view instanceof ImageViewEx) {
 			ExpanzFieldWidget exView = (ExpanzFieldWidget) view;
 			existingWidgets.add(exView);
@@ -557,10 +582,19 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 			ExpanzFieldWidget exView = (ExpanzFieldWidget) view;
 			existingWidgets.add(exView);
 			fieldWidgets.put(exView.getFieldId(), existingWidgets);
+		} else if (view instanceof ListViewEx) {
+			ListViewEx listView = (ListViewEx) view;
+			View rowView = getLayoutInflater().inflate(listView.getRowLayout(), null, true);
+			lists.put(listView.getModelContextObject(), listView);
+			recurseChildren(rowView, listView.getModelContextObject());
 		}
 		
 		if(view instanceof ExpanzFieldWidget) {
-			includedFields.add(((ExpanzFieldWidget)view).getFieldId());
+			
+			String fieldId = (contextObject != null) ? (contextObject + ".") : "";
+			fieldId = fieldId + ((ExpanzFieldWidget)view).getFieldId();
+			
+			includedFields.add(fieldId);
 		}
 	}
 	

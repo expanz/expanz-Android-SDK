@@ -44,7 +44,7 @@ public interface ContextEx {
 	/**
 	 * The text labels for the current activity
 	 */
-	Map<String, TextViewEx> getFieldLabels();
+	Map<String, List<TextViewEx>> getFieldLabels();
 	
 	/**
 	 * The ExpanzFieldWidget for the current activity

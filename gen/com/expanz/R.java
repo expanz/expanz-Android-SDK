@@ -56,7 +56,7 @@ theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
          */
-        public static int context_object=0x7f010000;
+        public static int context_object=0x7f01000d;
         /** <p>Must be a string value, using '\\;' to escape characters such as '\\n' or '\\uxxxx' for a unicode character.
 <p>This may also be a reference to a resource (in the form
 "<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
@@ -80,15 +80,7 @@ theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
          */
-        public static int login_title=0x7f01000d;
-        /** <p>Must be a string value, using '\\;' to escape characters such as '\\n' or '\\uxxxx' for a unicode character.
-<p>This may also be a reference to a resource (in the form
-"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
-theme attribute (in the form
-"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
-containing a value of this type.
-         */
-        public static int method_name=0x7f010001;
+        public static int method_name=0x7f010000;
         /** <p>Must be an integer value, such as "<code>100</code>".
 <p>This may also be a reference to a resource (in the form
 "<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
@@ -97,6 +89,14 @@ theme attribute (in the form
 containing a value of this type.
          */
         public static int quality=0x7f010004;
+        /** <p>Must be an integer value, such as "<code>100</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static int row_layout=0x7f010001;
         /** <p>Must be a floating point value, such as "<code>1.2</code>".
 <p>This may also be a reference to a resource (in the form
 "<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
@@ -172,15 +172,18 @@ containing a value of this type.
            <tr><td><code>{@link #BaseViewEx_activity_name com.expanz:activity_name}</code></td><td></td></tr>
            <tr><td><code>{@link #BaseViewEx_activity_style com.expanz:activity_style}</code></td><td></td></tr>
            <tr><td><code>{@link #BaseViewEx_batch_mode com.expanz:batch_mode}</code></td><td></td></tr>
+           <tr><td><code>{@link #BaseViewEx_context_object com.expanz:context_object}</code></td><td></td></tr>
            <tr><td><code>{@link #BaseViewEx_field_id com.expanz:field_id}</code></td><td></td></tr>
            </table>
            @see #BaseViewEx_activity_name
            @see #BaseViewEx_activity_style
            @see #BaseViewEx_batch_mode
+           @see #BaseViewEx_context_object
            @see #BaseViewEx_field_id
          */
         public static final int[] BaseViewEx = {
-            0x7f010009, 0x7f01000a, 0x7f01000b, 0x7f01000c
+            0x7f010009, 0x7f01000a, 0x7f01000b, 0x7f01000c,
+            0x7f01000d
         };
         /**
           <p>This symbol is the offset where the {@link com.expanz.R.attr#activity_name}
@@ -225,6 +228,20 @@ containing a value of this type.
         */
         public static final int BaseViewEx_batch_mode = 0;
         /**
+          <p>This symbol is the offset where the {@link com.expanz.R.attr#context_object}
+          attribute's value can be found in the {@link #BaseViewEx} array.
+
+
+          <p>Must be a string value, using '\\;' to escape characters such as '\\n' or '\\uxxxx' for a unicode character.
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name android:context_object
+        */
+        public static final int BaseViewEx_context_object = 4;
+        /**
           <p>This symbol is the offset where the {@link com.expanz.R.attr#field_id}
           attribute's value can be found in the {@link #BaseViewEx} array.
 
@@ -244,29 +261,13 @@ containing a value of this type.
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #ButtonEx_context_object com.expanz:context_object}</code></td><td></td></tr>
            <tr><td><code>{@link #ButtonEx_method_name com.expanz:method_name}</code></td><td></td></tr>
            </table>
-           @see #ButtonEx_context_object
            @see #ButtonEx_method_name
          */
         public static final int[] ButtonEx = {
-            0x7f010000, 0x7f010001
+            0x7f010000
         };
-        /**
-          <p>This symbol is the offset where the {@link com.expanz.R.attr#context_object}
-          attribute's value can be found in the {@link #ButtonEx} array.
-
-
-          <p>Must be a string value, using '\\;' to escape characters such as '\\n' or '\\uxxxx' for a unicode character.
-<p>This may also be a reference to a resource (in the form
-"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
-theme attribute (in the form
-"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
-containing a value of this type.
-          @attr name android:context_object
-        */
-        public static final int ButtonEx_context_object = 0;
         /**
           <p>This symbol is the offset where the {@link com.expanz.R.attr#method_name}
           attribute's value can be found in the {@link #ButtonEx} array.
@@ -280,34 +281,7 @@ theme attribute (in the form
 containing a value of this type.
           @attr name android:method_name
         */
-        public static final int ButtonEx_method_name = 1;
-        /** Attributes that can be used with a DefaultLoginEx.
-           <p>Includes the following attributes:</p>
-           <table>
-           <colgroup align="left" />
-           <colgroup align="left" />
-           <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #DefaultLoginEx_login_title com.expanz:login_title}</code></td><td></td></tr>
-           </table>
-           @see #DefaultLoginEx_login_title
-         */
-        public static final int[] DefaultLoginEx = {
-            0x7f01000d
-        };
-        /**
-          <p>This symbol is the offset where the {@link com.expanz.R.attr#login_title}
-          attribute's value can be found in the {@link #DefaultLoginEx} array.
-
-
-          <p>Must be a string value, using '\\;' to escape characters such as '\\n' or '\\uxxxx' for a unicode character.
-<p>This may also be a reference to a resource (in the form
-"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
-theme attribute (in the form
-"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
-containing a value of this type.
-          @attr name android:login_title
-        */
-        public static final int DefaultLoginEx_login_title = 0;
+        public static final int ButtonEx_method_name = 0;
         /** Attributes that can be used with a ImageCaptureEx.
            <p>Includes the following attributes:</p>
            <table>
@@ -416,6 +390,33 @@ containing a value of this type.
           @attr name android:type
         */
         public static final int ImageCaptureEx_type = 1;
+        /** Attributes that can be used with a ListViewEx.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #ListViewEx_row_layout com.expanz:row_layout}</code></td><td></td></tr>
+           </table>
+           @see #ListViewEx_row_layout
+         */
+        public static final int[] ListViewEx = {
+            0x7f010001
+        };
+        /**
+          <p>This symbol is the offset where the {@link com.expanz.R.attr#row_layout}
+          attribute's value can be found in the {@link #ListViewEx} array.
+
+
+          <p>Must be an integer value, such as "<code>100</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name android:row_layout
+        */
+        public static final int ListViewEx_row_layout = 0;
         /** Attributes that can be used with a TextViewEx.
            <p>Includes the following attributes:</p>
            <table>

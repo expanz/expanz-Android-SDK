@@ -25,17 +25,18 @@ import com.expanz.model.response.FieldResponse;
  * Required attributes are;
  * 
  * methodName - the name of the remote method to execute
- *
+ * 
  */
 public class ImageButtonEx extends ImageButton {
-	
+
 	private String methodName;
 	private String contextObject;
-	
+
 	/**
 	 * Ctor.
 	 * 
-	 * @param context the activity
+	 * @param context
+	 *            the activity
 	 */
 	public ImageButtonEx(Context context) {
 		super(context);
@@ -44,8 +45,10 @@ public class ImageButtonEx extends ImageButton {
 	/**
 	 * Ctor.
 	 * 
-	 * @param context the activity
-	 * @param attrs values defined in attr.xml
+	 * @param context
+	 *            the activity
+	 * @param attrs
+	 *            values defined in attr.xml
 	 */
 	public ImageButtonEx(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -56,20 +59,24 @@ public class ImageButtonEx extends ImageButton {
 	/**
 	 * Ctor.
 	 * 
-	 * @param context the activity
-	 * @param attrs values defined in attr.xml
-	 * @param defStyle the definition style
+	 * @param context
+	 *            the activity
+	 * @param attrs
+	 *            values defined in attr.xml
+	 * @param defStyle
+	 *            the definition style
 	 */
 	public ImageButtonEx(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init(attrs);
 		registerListener();
 	}
-	
+
 	/**
 	 * Load values from the attribute set
 	 * 
-	 * @param attrs values defined in attr.xml
+	 * @param attrs
+	 *            values defined in attr.xml
 	 */
 	private void init(AttributeSet attrs) {
 
@@ -82,59 +89,70 @@ public class ImageButtonEx extends ImageButton {
 			throw new RuntimeException("method_name attribute must be defined");
 		}
 
-		contextObject = a.getString(R.styleable.ButtonEx_context_object);
+		a = getContext().obtainStyledAttributes(attrs, R.styleable.BaseViewEx);
+
+		contextObject = a.getString(R.styleable.BaseViewEx_context_object);
 
 	}
-	
+
 	/**
 	 * Register an OnClickListener that will call the remote method
 	 */
 	private void registerListener() {
-		
+
 		setOnClickListener(new View.OnClickListener() {
 
 			public void onClick(View view) {
-				
-				if(isInEditMode()) {
+
+				if (isInEditMode()) {
 					return;
 				}
-				
+
 				final ContextEx contextEx = (ContextEx) getContext();
-				
+
 				contextEx.grabFocusHack();
-				
+
 				contextEx.hideKeyboard();
-				
-				ActivityRequest request = new ActivityRequest(contextEx.getActivityHandle(), contextEx.getSessionHandle());
-				
+
+				ActivityRequest request = new ActivityRequest(
+						contextEx.getActivityHandle(),
+						contextEx.getSessionHandle());
+
 				MethodRequest method = new MethodRequest();
 				method.setName(methodName);
 				method.setContextObject(contextObject);
 				request.addMethod(method);
-				
-				ExpanzCommand.getInstance().execute(request, 
+
+				ExpanzCommand.getInstance().execute(request,
 						new ServiceCallback<ActivityResponse>() {
 
 							public void completed(ActivityResponse activity) {
-								Map<String, TextViewEx> labels = contextEx.getFieldLabels();
-								Map<String, List<ExpanzFieldWidget>> fieldWidgetMap = contextEx.getFieldWidgets();
-								
-								for(FieldResponse field : activity.getFields()) {
-									TextViewEx label = labels.get(field.getId());
-									
-									if(label != null) {
-										if(label.isUseValue()) {
-											label.setText(field.getValue());
-										} else if(field.getLabel() != null) {
-											label.setText(field.getLabel());
+								Map<String, List<TextViewEx>> labels = contextEx
+										.getFieldLabels();
+								Map<String, List<ExpanzFieldWidget>> fieldWidgetMap = contextEx
+										.getFieldWidgets();
+
+								for (FieldResponse field : activity.getFields()) {
+									List<TextViewEx> fieldLabels = labels
+											.get(field.getId());
+
+									for (TextViewEx label : fieldLabels) {
+
+										if (label != null) {
+											if (label.isUseValue()) {
+												label.setText(field.getValue());
+											} else if (field.getLabel() != null) {
+												label.setText(field.getLabel());
+											}
 										}
+
 									}
-									
-									
-									List<ExpanzFieldWidget> fieldWidgets = fieldWidgetMap.get(field.getId()); 
-									
-									if(fieldWidgets != null) {
-										
+
+									List<ExpanzFieldWidget> fieldWidgets = fieldWidgetMap
+											.get(field.getId());
+
+									if (fieldWidgets != null) {
+
 										for (ExpanzFieldWidget fieldWidget : fieldWidgets) {
 
 											if (fieldWidget instanceof EditTextEx) {
@@ -164,19 +182,18 @@ public class ImageButtonEx extends ImageButton {
 
 									}
 								}
-								
-								if(activity.hasMessage()) {
-									contextEx.displayMessages(activity.getMessages());
+
+								if (activity.hasMessage()) {
+									contextEx.displayMessages(activity
+											.getMessages());
 								}
 							}
-					
-				});
-				
-				
+
+						});
 
 			}
 
 		});
-		
+
 	}
 }

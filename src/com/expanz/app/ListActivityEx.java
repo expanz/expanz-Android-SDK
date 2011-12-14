@@ -94,7 +94,7 @@ public abstract class ListActivityEx extends ListActivity implements
 	/**
 	 * Label for the field widgets, needs to be separate as same field id is used for widget and label
 	 */
-	private Map<String, TextViewEx> fieldLabels = new HashMap<String, TextViewEx>();
+	private Map<String, List<TextViewEx>> fieldLabels = new HashMap<String, List<TextViewEx>>();
 	
 	/**
 	 * any field widget views that exists as a child of the root view for this activity
@@ -189,7 +189,7 @@ public abstract class ListActivityEx extends ListActivity implements
 	/**
 	 * Get the field labels used in this activity
 	 */
-	public Map<String, TextViewEx> getFieldLabels() {
+	public Map<String, List<TextViewEx>> getFieldLabels() {
 		return fieldLabels;
 	}
 
@@ -337,10 +337,11 @@ public abstract class ListActivityEx extends ListActivity implements
 		
 		for(FieldResponse field : activity.getFields()) {
 			
-			TextViewEx label = fieldLabels.get(field.getId());
-			
-			if(label != null) {
-				label.setText(label.isUseValue() ? field.getValue() : field.getLabel());
+			if (fieldLabels.get(field.getId()) != null) {
+				for (TextViewEx label : fieldLabels.get(field.getId())) {
+					label.setText(label.isUseValue() ? field.getValue() : field
+							.getLabel());
+				}
 			}
 			
 			List<ExpanzFieldWidget> widgets = fieldWidgets.get(field.getId());
@@ -633,7 +634,14 @@ public abstract class ListActivityEx extends ListActivity implements
 		
 		if (view.getClass().equals(TextViewEx.class)) {
 			TextViewEx label = (TextViewEx) view;
-			fieldLabels.put(label.getFieldId(), label);
+			List<TextViewEx> existingLabels = fieldLabels.get(label.getFieldId());
+			
+			if(existingLabels == null) {
+				existingLabels = new ArrayList<TextViewEx>();
+			}
+			
+			existingLabels.add(label);
+			fieldLabels.put(label.getFieldId(), existingLabels);
 		}  else if (view instanceof ExpanzFieldWidget) {
 			ExpanzFieldWidget exView = (ExpanzFieldWidget) view;
 			existingWidgets.add(exView);
