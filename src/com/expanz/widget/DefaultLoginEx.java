@@ -23,10 +23,12 @@ import android.widget.TextView;
 import com.expanz.R;
 import com.expanz.ServiceCallback;
 import com.expanz.app.ActivityEx;
+import com.expanz.app.ContextEx;
 import com.expanz.app.ExpanzConstants;
 import com.expanz.model.Message;
 import com.expanz.model.response.SessionResponse;
 import com.expanz.util.ActivityMappingHolder;
+import com.google.inject.Inject;
 
 /**
  * A composite widget that contains all the necessary widgets
@@ -54,6 +56,7 @@ public class DefaultLoginEx extends TableLayout {
 	 * To capture guest check
 	 */
 	private CheckBox guestCheck; 
+	
 	
 	/**
 	 * Ctor.
@@ -358,8 +361,9 @@ public class DefaultLoginEx extends TableLayout {
 				
 				ref.setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
 				
-				progress.setVisibility(VISIBLE);
-
+				final ContextEx contextEx = (ContextEx) context;
+				contextEx.showProgress("Logging in");
+				
 				((ActivityEx) context).createSession(usernameEdit.getText()
 						.toString(), passwordEdit.getText().toString(),
 						guestCheck.isChecked(),
@@ -368,12 +372,10 @@ public class DefaultLoginEx extends TableLayout {
 							public void completed(SessionResponse session) {
 								
 								ref.setColorFilter(null);
-								progress.setVisibility(INVISIBLE);
 								
 								if (session.getSessionHandle() != null) {
 									Intent i = new Intent((Activity) context,
-											ActivityMappingHolder
-													.getInstance()
+											contextEx.getMappingHolder()
 													.getDefault().getForm());
 									i.putExtra(ExpanzConstants.SESSION_HANDLE,
 											session.getSessionHandle());
@@ -386,6 +388,9 @@ public class DefaultLoginEx extends TableLayout {
 									((ActivityEx) context)
 											.displayMessage(error);
 								}
+								
+								contextEx.hideProgress();
+								
 							}
 
 						});

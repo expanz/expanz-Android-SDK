@@ -28,6 +28,7 @@ import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.FieldResponse;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.ImageViewEx;
+import com.google.inject.Inject;
 
 /**
  * A simple utility class for transmitting captured images from a device's
@@ -37,7 +38,7 @@ import com.expanz.widget.ImageViewEx;
  * experienced then this should be refactored to be an async task. 
  * 
  */
-public class ImageCaptureAgent {
+public class ImageCaptureAgent implements ImageCapturer {
 	
 	private ImageDetails imageDeets;
 	private String activityHandle;
@@ -45,8 +46,10 @@ public class ImageCaptureAgent {
 	private Map<String, List<ExpanzFieldWidget>> fieldWidgets;
 	private Activity context;
 
+	@Inject ExpanzCommand expanzCommand;
+	
 	/**
-	 * Ctor.
+	 * Capture the image via intent and persist to local disk
 	 * 
 	 * @param imageDeets
 	 *            the details for a previously captured image.
@@ -59,23 +62,16 @@ public class ImageCaptureAgent {
 	 *            the request.
 	 * @param context
 	 *            the activity associated with the capture.
+	 * @throws IOException throws exception if unable to create cached image
 	 */
-	public ImageCaptureAgent(ImageDetails imageDeets, String activityHandle,
+	public void capture(ImageDetails imageDeets, String activityHandle,
 			String sessionHandle,
-			Map<String, List<ExpanzFieldWidget>> fieldWidgets, Activity context) {
+			Map<String, List<ExpanzFieldWidget>> fieldWidgets, Activity context) throws IOException {
 		this.imageDeets = imageDeets;
 		this.activityHandle = activityHandle;
 		this.sessionHandle = sessionHandle;
 		this.fieldWidgets = fieldWidgets;
-		this.context = context;
-	}
-	
-	/**
-	 * Capture the image via intent and persist to local disk
-	 * 
-	 * @throws IOException throws exception if unable to create cached image
-	 */
-	public void capture() throws IOException {
+		this.context = context; 
 		
 		Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
 		
@@ -164,8 +160,8 @@ public class ImageCaptureAgent {
 		request.addDelta(deltaRequest);
 
 		final Bitmap imageRef = bitmap;
-
-		ExpanzCommand.getInstance().execute(request,
+		
+		expanzCommand.execute(request,
 				new ServiceCallback<ActivityResponse>() {
 
 					public void completed(ActivityResponse activity) {

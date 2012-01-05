@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.expanz.app.ExpanzConstants;
@@ -95,7 +96,7 @@ public abstract class ResponseObject {
 	 * 
 	 * @param payload the raw data to persist
 	 */
-	public abstract void persist(String payload);
+	public abstract void persist(String payload, Context context);
 
 	/**
 	 * The URI of the persisted data

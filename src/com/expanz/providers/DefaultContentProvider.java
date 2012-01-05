@@ -1,8 +1,5 @@
 package com.expanz.providers;
 
-import com.expanz.model.entity.Activities;
-import com.expanz.model.entity.Sessions;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -14,6 +11,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+
+import com.expanz.model.entity.Activities;
+import com.expanz.model.entity.Sessions;
 
 /**
  * Default Data Access Object. The class defines common 

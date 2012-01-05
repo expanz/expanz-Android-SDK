@@ -4,6 +4,7 @@ import com.expanz.app.Config;
 import com.expanz.model.response.SessionResponse;
 import com.expanz.webservice.CreateSessionHandler;
 import com.expanz.webservice.XmlHandler;
+import com.google.inject.Inject;
 
 /**
  * CommandInput object for the com.expanz.ExpanzCommand. 
@@ -72,13 +73,16 @@ public class CreateSessionRequest extends RequestObject<SessionResponse> {
 	 */
 	private boolean defaultsSet;
 	
+
+	
 	/**
 	 * Ctor.
 	 * 
 	 * @param user the user name 
 	 * @param password the password for the user
 	 */
-	public CreateSessionRequest(String user, String password) {
+	public CreateSessionRequest(Config config, String user, String password) {
+		this.config = config;
 		this.user = user;
 		this.password = password;
 		this.rootElement = "CreateSessionX";
@@ -189,7 +193,7 @@ public class CreateSessionRequest extends RequestObject<SessionResponse> {
 	 */
 	@Override
 	public String getUri() {
-		return Config.getInstance().getExpanzSessionUrl();
+		return config.getExpanzSessionUrl();
 	}
 
 	/**
@@ -236,14 +240,14 @@ public class CreateSessionRequest extends RequestObject<SessionResponse> {
 			return; 
 		}
 		
-		appSite = Config.getInstance().getExpanzSite();
-		authDomain = Config.getInstance().getExpanzAuthDomain();
-		authenticationMode = Config.getInstance().getExpanzAuthMode();
-		clientType = Config.getInstance().getExpanzClientType();
-		clientVersion = Config.getInstance().getExpanzClientVersion();
-		schemaVersion = Config.getInstance().getExpanzSchemaVersion();
-		timeZone = Config.getInstance().getExpanzTimezone();
-		station = Config.getInstance().getExpanzStation();
+		appSite = config.getExpanzSite();
+		authDomain = config.getExpanzAuthDomain();
+		authenticationMode = config.getExpanzAuthMode();
+		clientType = config.getExpanzClientType();
+		clientVersion = config.getExpanzClientVersion();
+		schemaVersion = config.getExpanzSchemaVersion();
+		timeZone = config.getExpanzTimezone();
+		station = config.getExpanzStation();
 		
 		defaultsSet = true;
 		

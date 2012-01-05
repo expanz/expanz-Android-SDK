@@ -1,17 +1,15 @@
 package com.expanz.widget;
 
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.util.AttributeSet;
+import android.view.View;
+import android.widget.ImageButton;
+
 import com.expanz.R;
 import com.expanz.app.ContextEx;
 import com.expanz.model.entity.ImageDetails;
 import com.expanz.model.response.FieldResponse;
-
-import android.content.Context;
-import android.content.Intent;
-import android.content.res.TypedArray;
-import android.net.Uri;
-import android.util.AttributeSet;
-import android.view.View;
-import android.widget.ImageButton;
 
 public class lmageUploadImageButtonEx extends ImageButton implements ExpanzFieldWidget {
 	

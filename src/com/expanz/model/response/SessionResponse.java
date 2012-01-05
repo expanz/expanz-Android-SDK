@@ -1,15 +1,17 @@
 package com.expanz.model.response;
 
 import android.content.ContentValues;
+import android.content.Context;
 
 import com.expanz.ExpanzApplication;
-import com.expanz.ExpanzCommand;
+import com.expanz.ExpanzCommandImpl;
 import com.expanz.model.entity.Sessions;
+import com.google.inject.Inject;
 
 /**
  * Encapsulates the Session data
  * 
- * Forms the Command output part of the {@link ExpanzCommand}
+ * Forms the Command output part of the {@link ExpanzCommandImpl}
  *
  */
 public class SessionResponse extends ResponseObject {
@@ -82,19 +84,20 @@ public class SessionResponse extends ResponseObject {
 	public void setUiPreferences(UIPreferencesResponse uiPreferences) {
 		this.uiPreferences = uiPreferences;
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void persist(String payload) {
+	public void persist(String payload, Context context) {
 		
 		ContentValues values = new ContentValues();
 		
 		values.put(Sessions.SessionEntity.SESSION_HANDLE, sessionHandle);
 		values.put(Sessions.SessionEntity.PAYLOAD, payload);
 		
-		uri = ExpanzApplication.getInstance().getContentResolver().insert(Sessions.SessionEntity.CONTENT_URI, values);
+		uri = context.getContentResolver().insert(Sessions.SessionEntity.CONTENT_URI, values);
+
 	}
 
 }

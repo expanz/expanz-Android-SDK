@@ -10,7 +10,6 @@ import java.io.ByteArrayInputStream;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.SessionResponse;
 import com.expanz.util.XmlUtils;
 

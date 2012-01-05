@@ -1,6 +1,7 @@
 package com.expanz.app.data;
 
 import android.view.View;
+
 import com.expanz.model.response.DataRow;
 
 /**

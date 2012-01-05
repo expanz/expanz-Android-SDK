@@ -18,6 +18,7 @@ import com.expanz.model.request.ActivityRequest;
 import com.expanz.model.request.MethodRequest;
 import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.FieldResponse;
+import com.google.inject.Inject;
 
 /**
  * Widget that calls remote methods on the Expanz server.
@@ -123,7 +124,7 @@ public class ImageButtonEx extends ImageButton {
 				method.setContextObject(contextObject);
 				request.addMethod(method);
 
-				ExpanzCommand.getInstance().execute(request,
+				contextEx.getCommand().execute(request,
 						new ServiceCallback<ActivityResponse>() {
 
 							public void completed(ActivityResponse activity) {

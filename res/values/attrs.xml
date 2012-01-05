@@ -3,6 +3,14 @@
     <declare-styleable name="ButtonEx">
     	<attr name="method_name" format="string" />
 	</declare-styleable>
+	<declare-styleable name="DataWidgetEx">
+    	<attr name="data_id" format="string" />
+    	<attr name="query" format="string" />
+    	<attr name="populate_method" format="string" />
+    	<attr name="auto_populate" format="boolean" />
+    	<attr name="use_thumbnails" format="boolean" />
+    	<attr name="refresh" format="boolean" />
+	</declare-styleable>
 	<declare-styleable name="ListViewEx">
     	<attr name="row_layout" format="integer" />
 	</declare-styleable>

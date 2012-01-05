@@ -12,6 +12,7 @@ import com.expanz.app.ContextEx;
 import com.expanz.app.ExpanzConstants;
 import com.expanz.util.ActivityMapping;
 import com.expanz.util.ActivityMappingHolder;
+import com.google.inject.Inject;
 
 /**
  * Expanz Widget for creating an "Expanz" activity 
@@ -30,6 +31,7 @@ public class ActivityButtonEx extends Button {
 	private String activityName;
 	private String activityStyle;
 	private ActivityMapping mapping;
+
 	
 	/**
 	 * Ctor.
@@ -100,12 +102,12 @@ public class ActivityButtonEx extends Button {
 
 			public void onClick(View view) {
 				
-				mapping = ActivityMappingHolder.getInstance().get(activityName, activityStyle);
+				ContextEx context = (ContextEx) getContext();
+				
+				mapping = context.getMappingHolder().get(activityName, activityStyle);
 			
 				if(mapping != null) {
-					
-					ContextEx context = (ContextEx) getContext();
-					
+
 					Intent intent = new Intent(getContext(), mapping.getForm());
 					intent.putExtra(ExpanzConstants.SESSION_HANDLE, context.getSessionHandle());
 					getContext().startActivity(intent);

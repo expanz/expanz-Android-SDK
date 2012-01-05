@@ -18,9 +18,10 @@ import com.expanz.model.request.ActivityRequest;
 import com.expanz.model.request.MethodRequest;
 import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.FieldResponse;
+import com.google.inject.Inject;
 
 public class MethodButtonEx extends Button {
-
+	
 	/**
 	 * Remote method
 	 */
@@ -147,7 +148,7 @@ public class MethodButtonEx extends Button {
 				method.setContextObject(contextObject);
 				request.addMethod(method);
 
-				ExpanzCommand.getInstance().execute(request,
+				contextEx.getCommand().execute(request,
 						new ServiceCallback<ActivityResponse>() {
 
 							public void completed(ActivityResponse activity) {

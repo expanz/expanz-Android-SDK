@@ -1,5 +1,7 @@
 package com.expanz.model;
 
+import com.expanz.app.ExpanzConstants;
+
 
 /**
  * Models the message properties that are defined in the expanz schema

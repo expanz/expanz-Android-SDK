@@ -1,8 +1,5 @@
 package com.expanz.widget;
 
-import com.expanz.R;
-import com.expanz.model.response.FieldResponse;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
@@ -10,6 +7,9 @@ import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageButton;
+
+import com.expanz.R;
+import com.expanz.model.response.FieldResponse;
 
 /**
  * Widget to launch the device's phone. This widget requires an 

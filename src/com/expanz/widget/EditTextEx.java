@@ -16,6 +16,7 @@ import com.expanz.model.request.DeltaRequest;
 import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.FieldResponse;
 import com.expanz.validation.Validateable;
+import com.google.inject.Inject;
 
 /**
  * This widget extends EditText and sends delta requests to the Expanz server. 
@@ -126,7 +127,7 @@ public class EditTextEx extends EditText implements ExpanzFieldWidget {
 						
 						request.addDelta(deltaRequest);
 						
-						ExpanzCommand.getInstance().execute(request,
+						contextEx.getCommand().execute(request,
 								new ServiceCallback<ActivityResponse>() {
 
 							public void completed(ActivityResponse activity) {

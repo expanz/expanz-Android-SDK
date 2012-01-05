@@ -2,9 +2,10 @@ package com.expanz;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import android.app.Application;
+import roboguice.application.RoboApplication;
 import android.os.Environment;
 
 import com.expanz.app.Config;
@@ -17,6 +18,9 @@ import com.expanz.model.entity.Sessions;
 import com.expanz.util.ActivityMappingHolder;
 import com.expanz.widget.ImageViewEx;
 import com.expanz.widget.TextViewEx;
+import com.google.inject.Inject;
+import com.google.inject.Module;
+import com.google.inject.Singleton;
 
 /**
  * An application context that acts as a global registry for data/state that can
@@ -26,17 +30,23 @@ import com.expanz.widget.TextViewEx;
  * synchronization etc.
  * 
  */
-public class ExpanzApplication extends Application {
+@Singleton
+public class ExpanzApplication extends RoboApplication {
+	
+	@Inject ActivityMappingHolder holder;
+	
+	@Inject Config config;
 
 	/**
 	 * Map of Widgets that can be displayed in ListView
 	 */
-	private Map<String, ListViewableHandler> listViewables = new HashMap<String, ListViewableHandler>();
+	private Map<String, ListViewableHandler> listViewables =
+			new HashMap<String, ListViewableHandler>();
 	
 	/**
 	 * Static instance for use anywhere
 	 */
-	private static ExpanzApplication instance;
+//	private static ExpanzApplication instance;
 	
 	/**
 	 * Ctor.
@@ -44,20 +54,21 @@ public class ExpanzApplication extends Application {
 	 * Sets the static instance
 	 * 
 	 */
-	public ExpanzApplication() {
-		instance = this;
-	}
+//	public ExpanzApplication() {
+//		instance = this;
+//	}
 
 	/**
 	 * Execute on application startup
 	 */
 	@Override
 	public void onCreate() {
-
-		Config.getInstance().init(this);
 		
-		//load the activity mappings
-		ActivityMappingHolder.getInstance();
+		getInjector();
+		
+		config.init();
+		
+		holder.load();
 
 		registerListViewable(ImageViewEx.class.getName(),
 				new ImageViewExListViewableHandler());
@@ -86,13 +97,19 @@ public class ExpanzApplication extends Application {
 	 */
 	private void doCleanup() {
 
-		//Delete all existing Activities
-		getContentResolver().delete(Activities.ActivityEntity.CONTENT_URI,
-				null, null);
-		
-		//Delete all existing Sessions
-		getContentResolver().delete(Sessions.SessionEntity.CONTENT_URI,
-				null, null);
+		// Delete all existing Activities
+		try {
+			getContentResolver().delete(Activities.ActivityEntity.CONTENT_URI,
+					null, null);
+		} catch (Exception e) {
+		}
+
+		// Delete all existing Sessions
+		try {
+			getContentResolver().delete(Sessions.SessionEntity.CONTENT_URI,
+					null, null);
+		} catch (Exception e) {
+		}
 
 		// Delete any images captured via camera
 		// Note: Allow users to specify their own capture directory if they
@@ -138,8 +155,22 @@ public class ExpanzApplication extends Application {
 	 * 
 	 * @return the instance of the ApplicationContext
 	 */
-	public static ExpanzApplication getInstance() {
-		return instance;
-	}
+//	public static ExpanzApplication getInstance() {
+//		
+//		//for tests
+//		if(instance == null) {
+//			instance = new ExpanzApplication();
+//		}
+//		
+//		return instance;
+//	}
+	
+	/**
+	 * Add Roboguice modules
+	 */
+	@Override
+	protected void addApplicationModules(List<Module> modules) {
+        modules.add(new ExpanzCoreModule());
+    }
 
 }

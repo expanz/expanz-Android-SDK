@@ -6,15 +6,16 @@ import java.util.List;
 import android.content.ContentValues;
 import android.content.Context;
 
-import com.expanz.ExpanzApplication;
+import com.expanz.ExpanzCommandImpl;
 import com.expanz.model.entity.Activities;
+import com.expanz.model.request.DataPublicationRequest;
 
 
 /**
  * Holds state data for the response data from 
  * an activity request.
  * 
- * Forms the Command output object of the {@link ExpanzCommand}
+ * Forms the Command output object of the {@link ExpanzCommandImpl}
  *
  */
 public class ActivityResponse extends ResponseObject {
@@ -48,6 +49,7 @@ public class ActivityResponse extends ResponseObject {
 	 * Menu associated with an activity
 	 */
 	private ContextMenuResponse contextMenu;
+	
 	
 	/**
 	 * Add a data set
@@ -155,14 +157,14 @@ public class ActivityResponse extends ResponseObject {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void persist(String payload) {
+	public void persist(String payload, Context context) {
 		
 		ContentValues values = new ContentValues();
 		
 		values.put(Activities.ActivityEntity.ACTIVITY_HANDLE, handle);
 		values.put(Activities.ActivityEntity.PAYLOAD, payload);
 		
-		uri = ExpanzApplication.getInstance().getContentResolver().insert(Activities.ActivityEntity.CONTENT_URI, values);
+		uri = context.getContentResolver().insert(Activities.ActivityEntity.CONTENT_URI, values);
 		
 	}
 

@@ -3,6 +3,7 @@ package com.expanz.model.request;
 import com.expanz.app.Config;
 import com.expanz.model.response.ResponseObject;
 import com.expanz.webservice.XmlHandler;
+import com.google.inject.Inject;
 
 /**
  * Base CommandInput class for the com.expanz.ExpanzCommand
@@ -13,6 +14,8 @@ import com.expanz.webservice.XmlHandler;
  *
  */
 public abstract class RequestObject<T extends ResponseObject> {
+	
+	protected Config config;
 	
 	/**
 	 * Root element of the request
@@ -35,6 +38,7 @@ public abstract class RequestObject<T extends ResponseObject> {
 	 * @return
 	 */
 	abstract public XmlHandler<T> getXmlHandler();
+
 	
 	/**
 	 * Get the payload (XML) for the specific subclass, i.e. the total assembled XML.
@@ -51,7 +55,7 @@ public abstract class RequestObject<T extends ResponseObject> {
 	 * @return
 	 */
 	public String getUri() {
-		return Config.getInstance().getExpanzExecUrl();
+		return config.getExpanzExecUrl();
 	}
 	
 	/**
@@ -173,7 +177,7 @@ public abstract class RequestObject<T extends ResponseObject> {
 		StringBuilder xml = new StringBuilder();
 		
 		startElementWithAttributes(xml, rootElement); //e.g CreateSessionX or ExecX
-		addStringAttribute(xml, "xmlns", Config.getInstance().getExpanzNamespace());
+		addStringAttribute(xml, "xmlns", config.getExpanzNamespace());
 		closeParentElementWithAttributes(xml);
 		
 		startParentElement(xml, "xml");
@@ -198,6 +202,14 @@ public abstract class RequestObject<T extends ResponseObject> {
 		
 		return xml.toString();
 		
+	}
+
+	/**
+	 * Set the config for this request
+	 * 
+	 */
+	public void setConfig(Config config) {
+		this.config = config;
 	}
 
 }

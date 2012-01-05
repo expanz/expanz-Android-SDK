@@ -1,79 +1,130 @@
 package com.expanz.util;
 
-import static org.xmlpull.v1.XmlPullParser.END_DOCUMENT;
-import static org.xmlpull.v1.XmlPullParser.END_TAG;
-import static org.xmlpull.v1.XmlPullParser.START_TAG;
-
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.xmlpull.v1.XmlPullParserException;
-
 import android.app.Activity;
+import android.app.Application;
 import android.content.res.XmlResourceParser;
 
 import com.expanz.ExpanzApplication;
-import com.expanz.app.ExpanzConstants;
-import com.expanz.model.request.DataPublicationRequest;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 /**
  * Holds the mapping information defined in the file
  * /res/xml/activity_mappings.xml
  */
+@Singleton
 public class ActivityMappingHolder {
 
 	/**
-	 * The ActivityMappings defined in
+	 * The ActivityMappings defined in activity_mappings.xml
 	 */
-	private static Map<String, ActivityMapping> activities = new HashMap<String, ActivityMapping>();
-	private static Map<String, ActivityMapping> transitions = new HashMap<String, ActivityMapping>();
-	private static Map<String, ActivityMapping> all = new HashMap<String, ActivityMapping>();
+	private static Map<String, ActivityMapping> activities = new HashMap<String, ActivityMapping>(0);
 
-	private static ActivityMappingHolder instance;
+	/**
+	 * The Transitional ActivityMappings defined in activity_mappings.xml, i.e.
+	 * those that don't create a new server side "expanz" activity
+	 */
+	private static Map<String, ActivityMapping> transitions = new HashMap<String, ActivityMapping>(0);
 
+	/**
+	 * Both standard and transitional activities
+	 */
+	private static Map<String, ActivityMapping> all = new HashMap<String, ActivityMapping>(0);
+
+	/**
+	 * The default mapping, i.e. started after successful login
+	 */
 	private static ActivityMapping defaultMapping;
-	
-	private static ActivityMapping entryPointMapping;
 
-	private ActivityMappingHolder() {
+	/**
+	 * The very first activity, e.g. a login
+	 */
+	private static ActivityMapping entryPointMapping;
+	
+	/**
+	 * Resource class name that holds reference to activity_mappings XML file
+	 */
+	private static String mappingClassName = "com.expanz.R$xml";
+	
+	/**
+	 * Field name for activity_mappings, mostly used as a convenience for testing
+	 */
+	private static String mappingFieldName = "activity_mappings";
+	
+	@Inject Application application;
+	
+
+	/**
+	 * Setter for the mapping class name, i.e. name of package followed by .R$xml
+	 * 
+	 * @param mappingClassName
+	 */
+	public static void setMappingClassName(String mappingClassName) {
+		ActivityMappingHolder.mappingClassName = mappingClassName;
 	}
 
+	/**
+	 * Setter for field, i.e. name of activity mappings file
+	 * 
+	 * @param mappingFieldName
+	 */
+	public static void setMappingFieldName(String mappingFieldName) {
+		ActivityMappingHolder.mappingFieldName = mappingFieldName;
+	}
+
+	/**
+	 * Returns the activities map.
+	 * 
+	 * Map format is;
+	 * 
+	 * <Activity Name>:::<Activity Style>
+	 * 
+	 * @return
+	 */
 	public Map<String, ActivityMapping> getActivities() {
 		return activities;
 	}
 
+	/**
+	 * Return the default mapping, i.e. started after a successful login
+	 * 
+	 * @return
+	 */
 	public ActivityMapping getDefault() {
 		return defaultMapping;
 	}
-	
+
+	/**
+	 * Is the given class an entry point
+	 * 
+	 * @param clazz the class to verify
+	 * 
+	 * @return true if entry
+	 */
 	public boolean isEntryPoint(Class<? extends Activity> clazz) {
-		
-		if(entryPointMapping != null && entryPointMapping.getForm().equals(clazz)) {
+
+		if (entryPointMapping != null
+				&& entryPointMapping.getForm().equals(clazz)) {
 			return true;
 		}
-		
+
 		return false;
 	}
 
+
 	/**
-	 * Singleton getInstance
+	 * Get an activity by name and style
 	 * 
-	 * @param context
-	 * @return
+	 * @param name the name of the activity
+	 * @param style the style of the activity
+	 * 
+	 * @return the mapping, null if not found
 	 */
-	public static ActivityMappingHolder getInstance() {
-
-		if (instance == null) {
-			instance = new ActivityMappingHolder();
-			load();
-		}
-
-		return instance;
-
-	}
-
 	public ActivityMapping get(String name, String style) {
 
 		if (style == null) {
@@ -83,6 +134,14 @@ public class ActivityMappingHolder {
 		return activities.get(name + ":::" + style);
 	}
 
+	/**
+	 * Get a transitional activity by name and style
+	 * 
+	 * @param name the name of the activity
+	 * @param transitionStyle the name of the style
+	 * 
+	 * @return the mapping, null if not found
+	 */
 	public ActivityMapping getTransition(String name, String transitionStyle) {
 
 		if (transitionStyle == null) {
@@ -91,256 +150,60 @@ public class ActivityMappingHolder {
 
 		return transitions.get(name + ":::" + transitionStyle);
 	}
-	
+
+	/**
+	 * Get an activity by it's class/form.
+	 * 
+	 * Note: form is used in other expanz environments
+	 * to denote view/screen etc. This is a legacy term
+	 * from the use of windows forms. It should probably 
+	 * be revised. 
+	 * 
+	 * @param name class name
+	 * @return the mapping for the class
+	 */
 	public ActivityMapping getByForm(String name) {
 		return all.get(name);
 	}
 
-	private static void load() {
-		
-		XmlResourceParser parser = null;
-		
-		try {
-			
-			Class mappingClass = Class.forName("com.expanz.R$xml");
-			
-			Field mappingField = mappingClass.getField("activity_mappings");
-			
-			parser = ExpanzApplication.getInstance().getResources().getXml(mappingField.getInt(mappingClass.newInstance()));
-			
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-			return;
-		} 
+	/**
+	 * Load the mappings file resource from disk to parse
+	 * 
+	 * Made public for test purposes. 
+	 * 
+	 */
+	public void load() {
+
+		XmlResourceParser resourceParser = null;
 
 		try {
 
-			int type;
+			Class mappingClass = Class.forName(mappingClassName);
 
-			while ((type = parser.next()) != END_DOCUMENT) {
+			Field mappingField = mappingClass.getField(mappingFieldName);
 
-				if (type == START_TAG && "activity".equals(parser.getName())) {
+			resourceParser = ((ExpanzApplication)application).getResources()
+					.getXml(mappingField.getInt(mappingClass.newInstance()));
 
-					final int activityDepth = parser.getDepth();
-
-					String activity = parser.getAttributeValue(null, "name");
-					String form = parser.getAttributeValue(null, "form");
-					String style = parser.getAttributeValue(null, "style");
-					String transition = parser.getAttributeValue(null, "transitionStyle");
-					boolean createSession = parser.getAttributeBooleanValue(null, "createSession", false);
-					boolean createActivity = parser.getAttributeBooleanValue(null, "createActivity", false);
-					boolean isList = parser.getAttributeBooleanValue(null, "isList", false);
-					
-					ActivityMapping am = new ActivityMapping();
-					
-					am.setAndroidActivity((Class<? extends Activity>) Class.forName(form));
-					am.setCreateSession(createSession);
-					am.setCreateActivity(createActivity);
-					am.setExpanzActivityName(activity);
-					am.setList(isList);
-
-					if (transition != null) { // parse transitions
-
-						am.setStyle(transition);
-
-						transitions.put(activity + ":::" + transition, am);
-
-					} else { // parse activities
-
-						if (style == null) {
-							am.setStyle("");
-						} else {
-							am.setStyle(style);
-						}
-
-						boolean isDefault = parser.getAttributeBooleanValue(
-								null, "default", false);
-
-						if (isDefault) {
-							defaultMapping = am;
-						}
-						
-						boolean entryPoint = parser.getAttributeBooleanValue(
-								null, "entryPoint", false);
-						
-						if (entryPoint) {
-							entryPointMapping = am;
-							am.setEntryPoint(true);
-						}
-
-						if(activity != null && activity.trim().length() > 0) {
-							activities.put(activity + ":::" + style, am);
-						}
-
-					}
-					
-					while (((type = parser.next()) != END_TAG || parser
-							.getDepth() > activityDepth)
-							&& type != END_DOCUMENT) {
-						if (type == START_TAG
-								&& "layout".equals(parser.getName())) {
-							
-							String contentView = parser.getAttributeValue(null, "contentView");
-							
-							if(contentView != null) {
-								
-								try {
-									
-									Class clazz = Class.forName("com.expanz.R$layout");
-									Field field = clazz .getField(contentView);
-									
-									am.setContentView(field.getInt(clazz.newInstance()));
-									
-								} catch (Exception e) {
-									//ignore for now maybe give user a more informed message
-								}
-								
-							}
-							
-							String rootLayout = parser.getAttributeValue(null, "rootLayout");
-							
-							if(rootLayout != null) {
-								
-								try {
-									
-									Class clazz = Class.forName("com.expanz.R$id");
-									Field field = clazz .getField(rootLayout);
-									
-									am.setRootLayout(field.getInt(clazz.newInstance()));
-									
-								} catch (Exception e) {
-									//ignore for now maybe give user a more informed message
-								}
-								
-							}
-							
-						}
-						
-						if (type == START_TAG
-								&& "messageHandler".equals(parser.getName())) {
-							
-							String handlerType = parser.getAttributeValue(null, "type");
-							
-							if(handlerType.equals("toast")) {
-								am.setMessageHandlerType(ExpanzConstants.TYPE_TOAST);
-							} else if(handlerType.equals("alert")) {
-								am.setMessageHandlerType(ExpanzConstants.TYPE_ALERT);
-							} else if(handlerType.equals("notification")) {
-								am.setMessageHandlerType(ExpanzConstants.TYPE_NOTIFICATION);
-							}
-							
-						}
-						
-						if (type == START_TAG
-								&& "menu".equals(parser.getName())) {
-							am.addMenuItem(parser.getAttributeValue(null, "name"));
-						}
-						
-						if (type == START_TAG
-								&& "listHeaderView".equals(parser.getName())) {
-							
-							String header = parser.getAttributeValue(null, "name");
-							
-							if(header != null) {
-								
-								try {
-
-									Class clazz = Class.forName("com.expanz.R$layout");
-									
-									Field field = clazz .getField(header);
-									
-									am.addListHeader(field.getInt(clazz.newInstance()));
-									
-								} catch (Exception e) {
-									//ignore for now maybe give user a more informed message
-								}
-								
-							}
-			
-						}
-						
-						if (type == START_TAG
-								&& "listFooterView".equals(parser.getName())) {
-							
-							String footer = parser.getAttributeValue(null, "name");
-							
-							if(footer != null) {
-								
-								try {
-
-									Class clazz = Class.forName("com.expanz.R$layout");
-									
-									Field field = clazz .getField(footer);
-									
-									am.addListFooter(field.getInt(clazz.newInstance()));
-									
-								} catch (Exception e) {
-									//ignore for now maybe give user a more informed message
-								}
-								
-							}
-			
-						}
-						
-						if (type == START_TAG
-								&& "listView".equals(parser.getName())) {
-							
-							String listView = parser.getAttributeValue(null, "name");
-							
-							if(listView != null) {
-								
-								try {
-									
-									Class clazz = Class.forName("com.expanz.R$layout");
-									
-									Field field = clazz .getField(listView);
-									
-									am.setListView(field.getInt(clazz.newInstance()));
-									
-								} catch (Exception e) {
-									//ignore for now maybe give user a more informed message
-								}
-								
-							}
-						}
-						
-						if (type == START_TAG
-								&& "dataPublication".equals(parser.getName())) {
-							
-							String populateMethod = parser.getAttributeValue(null, "populateMethod");
-							String id = parser.getAttributeValue(null, "id");
-							String query = parser.getAttributeValue(null, "query");
-							String context = parser.getAttributeValue(null, "context");
-							boolean autoPopulate = parser.getAttributeBooleanValue(null, "autoPopulate", true);
-							boolean useThumbnails = parser.getAttributeBooleanValue(null, "useThumbNailImages", false);
-							
-							DataPublicationRequest publication = new DataPublicationRequest();
-							publication.setPopulateMethod(populateMethod);
-							publication.setAutoPopulate(autoPopulate);
-							publication.setContext(context);
-							publication.setId(id);
-							publication.setQuery(query);
-							publication.setUseThumbnails(useThumbnails);
-							
-							am.addPublication(publication);
-							
-						}
-					}
-					
-					all.put(form, am);
-
-				}
-			}
-
-		} catch (XmlPullParserException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
+			//TODO make this a specific runtime, catching Exception not so bad here 
+			//due to all errors being fatal
+			throw new RuntimeException("error parsing activity_mappings " + e.getMessage());
 		}
 		
+		ActivityMappingParser mappingParser = new ActivityMappingParserImpl();
+		
+		MappingParseResult result = mappingParser.parse(resourceParser);
+		
+		if(result != null) {
+			activities = result.getActivities();
+			transitions = result.getTransitions();
+			all = result.getAll();
+			defaultMapping = result.getDefaultMapping();
+			entryPointMapping = result.getEntryPointMapping();
+		}
+
 	}
 
 }

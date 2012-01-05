@@ -5,10 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Encapsulates menu response data
  * 
- * Forms the Cammond output part of the {@link ExpanzCommand} object
+ * Forms the Cammond output part of the {@link ExpanzCommandImpl} object
  * 
  */
 public class MenuResponse {

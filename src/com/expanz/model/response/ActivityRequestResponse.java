@@ -1,10 +1,12 @@
 package com.expanz.model.response;
 
+import com.expanz.ExpanzCommandImpl;
+
 /**
  * Holds state data for the response data from 
  * an activity-request request.
  * 
- * Forms the Command output object of the {@link ExpanzCommand}
+ * Forms the Command output object of the {@link ExpanzCommandImpl}
  *
  */
 public class ActivityRequestResponse {

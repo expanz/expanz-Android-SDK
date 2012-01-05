@@ -4,8 +4,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.expanz.ExpanzCommand;
 import com.expanz.model.Message;
 import com.expanz.model.entity.ImageDetails;
+import com.expanz.util.ActivityMappingHolder;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.TextViewEx;
 
@@ -55,5 +57,26 @@ public interface ContextEx {
 	 * Display error messages etc using the current message state of the activity. 
 	 */
 	void displayMessages(Collection<Message> messages);
+	
+	/**
+	 * Show a progress Dialog
+	 * 
+	 * @param message dialog test
+	 */
+	void showProgress(String message);
 
+	/**
+	 * Stop showing a progress dialog
+	 */
+	void hideProgress();
+	
+	/**
+	 * Used mostly so widgets can get access to mappings
+	 */
+	ActivityMappingHolder getMappingHolder();
+	
+	/**
+	 * Used mostly so widgets can get access to commands
+	 */
+	ExpanzCommand getCommand();
 }

@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import roboguice.activity.RoboActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -44,13 +46,16 @@ import com.expanz.model.response.ProcessAreaResponse;
 import com.expanz.model.response.SessionResponse;
 import com.expanz.util.ActivityMapping;
 import com.expanz.util.ActivityMappingHolder;
-import com.expanz.util.ImageCaptureAgent;
+import com.expanz.util.ImageCapturer;
 import com.expanz.webservice.ActivityHandler;
+import com.expanz.widget.DataWidgetEx;
 import com.expanz.widget.EditTextEx;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.ImageViewEx;
 import com.expanz.widget.ListViewEx;
 import com.expanz.widget.TextViewEx;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 /**
  * Base class for all non list based Expanz (Android) Activities. 
@@ -58,8 +63,10 @@ import com.expanz.widget.TextViewEx;
  * or no code in the case where tooling support is used.
  * 
  */
-public abstract class ActivityEx extends Activity implements MessageListener, ContextEx {
+public abstract class ActivityEx extends RoboActivity implements MessageListener, ContextEx {
 	
+	private static final String EXPANZ_SHARED_PREFS = "expanz";
+
 	/**
 	 * Constant for camera integration activity result
 	 */
@@ -96,9 +103,9 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	private Map<String, List<ExpanzFieldWidget>> fieldWidgets = new HashMap<String, List<ExpanzFieldWidget>>();
 	
 	/**
-	 * ListViews that are inside the activity's view
+	 * Data Widgets that are inside the activity's view
 	 */
-	private Map<String, ListViewEx> lists = new HashMap<String, ListViewEx>();
+	private Map<String, DataWidgetEx> dataWidgets = new HashMap<String, DataWidgetEx>();
 	
 	/**
 	 * the root view for this activity, need so we can recurse child elements
@@ -135,13 +142,26 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	/**
 	 * Send images to the server via camera intent.
 	 */
-	private ImageCaptureAgent imageCaptureAgent;
+	private ImageCapturer imageCapturer;
 	
 	/**
 	 * The fields that are children of this Activity, 
 	 * used for optimization
 	 */
 	private Set<String> includedFields = new HashSet<String>();
+	
+	/**
+	 * A default progress dialog
+	 */
+	private ProgressDialog progress;
+	
+	@Inject ActivityMappingHolder mappingHolder;
+	
+	@Inject ExpanzCommand expanzCommand;
+	
+	@Inject Provider<ImageCapturer> imageCapturerProvider;
+	
+	@Inject Config config;
 
 	
 	@Override
@@ -149,7 +169,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		
 		super.onCreate(savedInstanceState);
 		
-		mPrefs = getSharedPreferences("expanz", MODE_PRIVATE);
+		mPrefs = getSharedPreferences(EXPANZ_SHARED_PREFS, MODE_PRIVATE);
 		
 		sessionHandle = getIntent().getStringExtra(ExpanzConstants.SESSION_HANDLE);
 		
@@ -183,7 +203,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 */
 	protected void loadMapping() {
 		
-		mapping = ActivityMappingHolder.getInstance().getByForm(this.getClass().getName());
+		mapping = mappingHolder.getByForm(this.getClass().getName());
 
 		if(mapping.getContentView() != null) {
 			setContentView(mapping.getContentView());
@@ -294,6 +314,9 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 			List<DataPublicationRequest> publications) {
 
 		ActivityResponse activity = null;
+		
+		//TODO make message configurable
+		showProgress("loading data");
 
 		if (!isNew) {
 			activity = loadActivity(activityName);
@@ -314,12 +337,15 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 				request.addField(rowField);
 			}
 
-			ExpanzCommand.getInstance().execute(request, new ServiceCallback<ActivityResponse>() {
+			expanzCommand.execute(request, new ServiceCallback<ActivityResponse>() {
 
 				public void completed(ActivityResponse response) {
+					
 					// TODO Auto-generated method stub
 					activityUri = response.getUri();
 					initFields(response);
+					
+					hideProgress();
 				}
 				
 			});
@@ -362,10 +388,10 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		
 		for(Data data : activity.getData()) {
 			
-			ListViewEx listView = lists.get(data.getContextObject());
+			DataWidgetEx dataWidget = dataWidgets.get(data.getContextObject());
 			
-			if(listView != null) {
-				listView.updateData(data);
+			if(dataWidget != null) {
+				dataWidget.updateData(data);
 			}
 			
 		}
@@ -412,7 +438,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 
 		GetSessionDataRequest request = new GetSessionDataRequest(sessionHandle);
 
-		ExpanzCommand.getInstance().execute(request,
+		expanzCommand.execute(request,
 				new ServiceCallback<SessionResponse>() {
 
 					public void completed(SessionResponse session) {
@@ -438,8 +464,7 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 
 									for (ProcessAreaActivityResponse activity : activities) {
 
-										ActivityMapping mapping = ActivityMappingHolder
-												.getInstance().get(
+										ActivityMapping mapping = mappingHolder.get(
 														activity.getName(),
 														activity.getStyle());
 
@@ -473,15 +498,13 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 */
 	public void createSession(String username, String password, boolean guest, final ServiceCallback<SessionResponse> callback) {
 		
-		//TODO move session handle to the db and remove this convenience method from here
-		
-		CreateSessionRequest request = new CreateSessionRequest(username, password);
-		
+		CreateSessionRequest request = new CreateSessionRequest(config, username, password);
+	
 		if(guest) {
 			request.setAuthenticationMode("guest");
 		}
 		
-		ExpanzCommand.getInstance().execute(request, 
+		expanzCommand.execute(request, 
 				new ServiceCallback<SessionResponse>() {
 
 			public void completed(SessionResponse session) {
@@ -585,7 +608,6 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 		} else if (view instanceof ListViewEx) {
 			ListViewEx listView = (ListViewEx) view;
 			View rowView = getLayoutInflater().inflate(listView.getRowLayout(), null, true);
-			lists.put(listView.getModelContextObject(), listView);
 			recurseChildren(rowView, listView.getModelContextObject());
 		}
 		
@@ -595,6 +617,13 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 			fieldId = fieldId + ((ExpanzFieldWidget)view).getFieldId();
 			
 			includedFields.add(fieldId);
+		}
+		
+		if(view instanceof DataWidgetEx) {
+			
+			DataWidgetEx dataWidget = (DataWidgetEx) view;
+			
+			dataWidgets.put(dataWidget.getDataId(), dataWidget);
 		}
 	}
 	
@@ -723,9 +752,9 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	 */
 	public void uploadImage(ImageDetails details) {
 		
-		imageCaptureAgent = new ImageCaptureAgent(details, activityHandle, sessionHandle, fieldWidgets, this);
+		imageCapturer = imageCapturerProvider.get();
 		try {
-			imageCaptureAgent.capture();
+			imageCapturer.capture(details, activityHandle, sessionHandle, fieldWidgets, this);
 		} catch (IOException e) {
 			displayMessage(new Message(ExpanzConstants.ERROR, e.getMessage(), null, null));
 		}
@@ -743,8 +772,8 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 
 				try {
 
-					if(imageCaptureAgent != null) {
-						imageCaptureAgent.send();
+					if(imageCapturer != null) {
+						imageCapturer.send();
 					}
 					
 				} catch (Exception e) {
@@ -755,6 +784,30 @@ public abstract class ActivityEx extends Activity implements MessageListener, Co
 	        }
 	    }
 	}
+	
+	public void showProgress(String message) {
+		
+        if (progress == null) {
+        	progress = new ProgressDialog(this);
+        	progress.setIndeterminate(true);
+        }
 
+        progress.setMessage(message);
+        progress.show();
+    }
+
+    public void hideProgress() {
+        if (progress != null) {
+        	progress.dismiss();
+        }
+    }
+
+	public ActivityMappingHolder getMappingHolder() {
+		return mappingHolder;
+	}
+	
+	public ExpanzCommand getCommand() {
+		return expanzCommand;
+	}
 
 }

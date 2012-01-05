@@ -1,9 +1,9 @@
 package com.expanz.model.entity;
 
-import com.expanz.providers.DefaultContentProvider;
-
 import android.net.Uri;
 import android.provider.BaseColumns;
+
+import com.expanz.providers.DefaultContentProvider;
 
 /**
  * Persistable entity that represents a Session Response.
