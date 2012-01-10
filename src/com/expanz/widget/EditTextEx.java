@@ -6,7 +6,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.EditText;
 
-import com.expanz.ExpanzCommand;
 import com.expanz.R;
 import com.expanz.ServiceCallback;
 import com.expanz.app.ContextEx;
@@ -16,7 +15,6 @@ import com.expanz.model.request.DeltaRequest;
 import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.FieldResponse;
 import com.expanz.validation.Validateable;
-import com.google.inject.Inject;
 
 /**
  * This widget extends EditText and sends delta requests to the Expanz server. 
@@ -118,7 +116,7 @@ public class EditTextEx extends EditText implements ExpanzFieldWidget {
 					
 					EditTextEx exView = (EditTextEx) view;
 					
-					ContextEx contextEx = (ContextEx) getContext();
+					final ContextEx contextEx = (ContextEx) getContext();
 					
 					if(!hasFocus) {
 						
@@ -130,9 +128,11 @@ public class EditTextEx extends EditText implements ExpanzFieldWidget {
 						contextEx.getCommand().execute(request,
 								new ServiceCallback<ActivityResponse>() {
 
-							public void completed(ActivityResponse activity) {
+							public void completed(ActivityResponse response) {
 								
-								for (FieldResponse field : activity.getFields()) {
+								contextEx.initFields(response);
+								
+								for (FieldResponse field : response.getFields()) {
 									if(field.getId().equals(fieldId)) {
 										
 										if(field.isNull()) {
@@ -143,7 +143,7 @@ public class EditTextEx extends EditText implements ExpanzFieldWidget {
 										
 										if(!field.isValid()) {
 											
-											Message message = activity.getMessage(field.getId());
+											Message message = response.getMessage(field.getId());
 											
 											setError((message == null) ? null : message.getMessage());
 										} else {

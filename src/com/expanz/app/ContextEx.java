@@ -7,6 +7,7 @@ import java.util.Map;
 import com.expanz.ExpanzCommand;
 import com.expanz.model.Message;
 import com.expanz.model.entity.ImageDetails;
+import com.expanz.model.response.ActivityResponse;
 import com.expanz.util.ActivityMappingHolder;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.TextViewEx;
@@ -79,4 +80,13 @@ public interface ContextEx {
 	 * Used mostly so widgets can get access to commands
 	 */
 	ExpanzCommand getCommand();
+	
+	/**
+	 * Update the state of widgets on the activity
+	 * that are contained in the response
+	 * 
+	 * @param response the activity response
+	 */
+	void initFields(ActivityResponse response);
+	
 }

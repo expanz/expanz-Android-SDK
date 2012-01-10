@@ -21,7 +21,9 @@ public class TextViewExListViewableHandler implements ListViewableHandler {
 		final TextViewEx textView = (TextViewEx) rowView;
 		
 		for(DataCell cell : data.getCells()) {
-			if(textView.getFieldId().equals(cell.getFieldId())) {
+			//TODO change getLabel() to some sort of unique id
+			//apparently can't use either label or field
+			if(textView.getFieldId().equals(cell.getLabel())) { 
 				((TextViewEx) rowView).setText(cell.getValue());
 			}
 		}

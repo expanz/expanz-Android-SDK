@@ -67,6 +67,7 @@ public class SpinnerEx extends Spinner implements DataWidgetEx {
 		super(context, attrs);
 		this.setFocusable(true);
 		init(attrs);
+		addListener();
 
 	}
 
@@ -144,21 +145,21 @@ public class SpinnerEx extends Spinner implements DataWidgetEx {
 
 				if (holder != null) {
 
-					ContextEx contextEx = (ContextEx) getContext();
+					final ContextEx contextEx = (ContextEx) getContext();
 
 					ActivityRequest request = new ActivityRequest(
 							contextEx.getActivityHandle(),
 							contextEx.getSessionHandle());
 					DeltaRequest deltaRequest = new DeltaRequest(fieldId,
-							holder.value);
+							holder.id);
 
 					request.addDelta(deltaRequest);
 
 					contextEx.getCommand().execute(request,
 							new ServiceCallback<ActivityResponse>() {
 
-								public void completed(ActivityResponse activity) {
-									// TODO what are the possible scenarios here
+								public void completed(ActivityResponse response) {
+									contextEx.initFields(response);
 								}
 							});
 				}

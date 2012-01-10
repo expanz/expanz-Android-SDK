@@ -33,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.expanz.ExpanzApplication;
 import com.expanz.ExpanzCommand;
 import com.expanz.ServiceCallback;
 import com.expanz.app.data.ListSimpleAdapterEx;
@@ -167,6 +168,8 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	 */
 	private ProgressDialog progress;
 	
+	@Inject ExpanzApplication application;
+	
 	@Inject ActivityMappingHolder mappingHolder;
 	
 	@Inject ExpanzCommand expanzCommand;
@@ -274,6 +277,10 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	@Override
 	protected void onPause() {
 		
+		if (progress != null) {
+        	progress.dismiss();
+        }
+		
 		if(activityUri != null) {
 			SharedPreferences.Editor editor = mPrefs.edit();
 			editor.putString(ExpanzConstants.ACTIVITY_URI, activityUri.toString());
@@ -340,7 +347,7 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	 * 
 	 * @param activity
 	 */
-	private void initFields(ActivityResponse activity) {
+	public void initFields(ActivityResponse activity) {
 		
 		TextViewEx title = (TextViewEx) fieldWidgets.get("activitytitle");
 		
@@ -376,6 +383,26 @@ public abstract class ListActivityEx extends RoboListActivity implements
 		
 		if(activity.hasMessage()) {
 			displayMessages(activity.getMessages());
+		}
+		
+		ActivityRequestResponse activityRequest = activity
+				.getActivityRequest();
+
+		if (activityRequest != null) {
+
+			mappingHolder.get(
+							activityRequest.getId(),
+							activityRequest.getStyle());
+
+			if (mapping != null) {
+				Intent intent = new Intent(getContextRef(),
+						mapping.getForm());
+				intent.putExtra(ExpanzConstants.SESSION_HANDLE,
+						sessionHandle);
+				intent.putExtra(ExpanzConstants.INIT_KEY,
+						activityRequest.getKey());
+				startActivity(intent);
+			}
 		}
 	}
 
@@ -821,26 +848,7 @@ public abstract class ListActivityEx extends RoboListActivity implements
 				new ServiceCallback<ActivityResponse>() {
 
 					public void completed(ActivityResponse response) {
-
-						ActivityRequestResponse activityRequest = response
-								.getActivityRequest();
-
-						if (activityRequest != null) {
-
-							mappingHolder.get(
-											activityRequest.getId(),
-											activityRequest.getStyle());
-
-							if (mapping != null) {
-								Intent intent = new Intent(getContextRef(),
-										mapping.getForm());
-								intent.putExtra(ExpanzConstants.SESSION_HANDLE,
-										sessionHandle);
-								intent.putExtra(ExpanzConstants.INIT_KEY,
-										activityRequest.getKey());
-								startActivity(intent);
-							}
-						}
+						initFields(response);
 					}
 
 				});
@@ -1020,16 +1028,25 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	
 	public void showProgress(String message) {
 		
+		if(isFinishing()) {
+			return;
+		}
+		
         if (progress == null) {
         	progress = new ProgressDialog(this);
         	progress.setIndeterminate(true);
         }
 
-//        progress.setMessage(message);
-//        progress.show();
+        progress.setMessage(message);
+        progress.show();
     }
 
     public void hideProgress() {
+    	
+    	if(isFinishing()) {
+			return;
+		}
+    	
         if (progress != null) {
         	progress.dismiss();
         }

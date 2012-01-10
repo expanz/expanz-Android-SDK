@@ -29,6 +29,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import com.expanz.ExpanzApplication;
 import com.expanz.ExpanzCommand;
 import com.expanz.ServiceCallback;
 import com.expanz.model.Message;
@@ -38,6 +39,7 @@ import com.expanz.model.request.CreateActivityRequest;
 import com.expanz.model.request.CreateSessionRequest;
 import com.expanz.model.request.DataPublicationRequest;
 import com.expanz.model.request.GetSessionDataRequest;
+import com.expanz.model.response.ActivityRequestResponse;
 import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.Data;
 import com.expanz.model.response.FieldResponse;
@@ -154,6 +156,8 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	 * A default progress dialog
 	 */
 	private ProgressDialog progress;
+	
+	@Inject ExpanzApplication application;
 	
 	@Inject ActivityMappingHolder mappingHolder;
 	
@@ -330,6 +334,10 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 				request.addPublication(publication);
 			}
 			
+			for(Map.Entry<String, DataWidgetEx> entry : dataWidgets.entrySet()) {
+				request.addPublication(entry.getValue().toPublication());
+			}
+			
 			request.addMediaResourceFields(mediaResourceFields);
 			request.setInitialKey(getIntent().getStringExtra(ExpanzConstants.INIT_KEY));
 			
@@ -359,7 +367,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	 * 
 	 * @param activity
 	 */
-	private void initFields(ActivityResponse activity) {
+	public void initFields(ActivityResponse activity) {
 		
 		activityUri = activity.getUri();
 		
@@ -371,8 +379,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 							.getLabel());
 				}
 			}
-		
-			
+
 			List<ExpanzFieldWidget> widgets = fieldWidgets.get(field.getId());
 			
 			if (widgets != null) {
@@ -388,7 +395,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 		
 		for(Data data : activity.getData()) {
 			
-			DataWidgetEx dataWidget = dataWidgets.get(data.getContextObject());
+			DataWidgetEx dataWidget = dataWidgets.get(data.getId());
 			
 			if(dataWidget != null) {
 				dataWidget.updateData(data);
@@ -401,12 +408,37 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 		if(activity.hasMessage()) {
 			displayMessages(activity.getMessages());
 		}
+		
+		ActivityRequestResponse activityRequest = activity
+				.getActivityRequest();
+
+		if (activityRequest != null) {
+
+			mappingHolder.get(
+							activityRequest.getId(),
+							activityRequest.getStyle());
+
+			if (mapping != null) {
+				Intent intent = new Intent(getContextRef(),
+						mapping.getForm());
+				intent.putExtra(ExpanzConstants.SESSION_HANDLE,
+						sessionHandle);
+				intent.putExtra(ExpanzConstants.INIT_KEY,
+						activityRequest.getKey());
+				startActivity(intent);
+			}
+		}
+		
 	}
 	
 	
 
 	@Override
 	protected void onPause() {
+		
+		if (progress != null) {
+        	progress.dismiss();
+        }
 		
 		if(activityUri != null) {
 			SharedPreferences.Editor editor = mPrefs.edit();
@@ -787,16 +819,27 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	
 	public void showProgress(String message) {
 		
+		if(isFinishing()) {
+			return;
+		}
+		
         if (progress == null) {
         	progress = new ProgressDialog(this);
         	progress.setIndeterminate(true);
         }
 
+        
         progress.setMessage(message);
         progress.show();
+        
     }
 
     public void hideProgress() {
+    	
+    	if(isFinishing()) {
+			return;
+		}
+    	
         if (progress != null) {
         	progress.dismiss();
         }
@@ -809,5 +852,6 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	public ExpanzCommand getCommand() {
 		return expanzCommand;
 	}
+	
 
 }
