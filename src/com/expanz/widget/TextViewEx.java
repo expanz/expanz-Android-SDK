@@ -122,7 +122,17 @@ public class TextViewEx extends TextView implements ExpanzFieldWidget, ListViewa
 	 * Updates the value of the TextView
 	 */
 	public void setField(FieldResponse field) {
-		setText(useValue ? field.getValue() : field.getLabel());
+		if(useValue) {
+			setText(field.getValue());
+		} else {
+			//TODO why are labels sometimes omitted/nulled for no
+			//apparent reason
+			if(field.getLabel() != null) {
+				setText(field.getLabel());
+			}
+			
+		}
+//		setText(useValue ? field.getValue() : field.getLabel());
 	}
 
 }

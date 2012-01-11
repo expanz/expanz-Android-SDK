@@ -94,12 +94,7 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	 * the expanz session this activity belongs to
 	 */
 	protected String sessionHandle;
-	
-	/**
-	 * Label for the field widgets, needs to be separate as same field id is used for widget and label
-	 */
-	private Map<String, List<TextViewEx>> fieldLabels = new HashMap<String, List<TextViewEx>>();
-	
+		
 	/**
 	 * any field widget views that exists as a child of the root view for this activity
 	 */
@@ -204,12 +199,6 @@ public abstract class ListActivityEx extends RoboListActivity implements
 
 	}
 	
-	/**
-	 * Get the field labels used in this activity
-	 */
-	public Map<String, List<TextViewEx>> getFieldLabels() {
-		return fieldLabels;
-	}
 
 	/**
 	 * Get the field widgets used in this activity
@@ -351,20 +340,15 @@ public abstract class ListActivityEx extends RoboListActivity implements
 		
 		TextViewEx title = (TextViewEx) fieldWidgets.get("activitytitle");
 		
-		activityUri = activity.getUri();
+		if(activity.getUri() != null) {
+			activityUri = activity.getUri();
+		}
 		
 		if(title != null) {
 			title.setText(activity.getTitle());
 		}
 		
 		for(FieldResponse field : activity.getFields()) {
-			
-			if (fieldLabels.get(field.getId()) != null) {
-				for (TextViewEx label : fieldLabels.get(field.getId())) {
-					label.setText(label.isUseValue() ? field.getValue() : field
-							.getLabel());
-				}
-			}
 			
 			List<ExpanzFieldWidget> widgets = fieldWidgets.get(field.getId());
 
@@ -508,54 +492,46 @@ public abstract class ListActivityEx extends RoboListActivity implements
 
 		GetSessionDataRequest request = new GetSessionDataRequest(sessionHandle);
 
-		expanzCommand.execute(request,
-				new ServiceCallback<SessionResponse>() {
+		expanzCommand.execute(request, new ServiceCallback<SessionResponse>() {
 
-					public void completed(SessionResponse session) {
+			public void completed(SessionResponse session) {
 
-						mappings.clear();
+				mappings.clear();
 
-						if (session.getMenu() == null) {
-							return;
-						}
+				if (session.getMenu() == null) {
+					return;
+				}
 
-					//	for (String menuItem : menuItems) {
+				Map<String, ProcessAreaResponse> processAreas = session
+						.getMenu().getProcessAreas();
 
-							Map<String, ProcessAreaResponse> processAreas = session.getMenu()
-									.getProcessAreas();
-							
-							for(Map.Entry<String, ProcessAreaResponse> entry : processAreas.entrySet()) {
-								
-								if (session.getMenu() != null
-										&& entry.getValue() != null) {
+				for (Map.Entry<String, ProcessAreaResponse> entry : processAreas
+						.entrySet()) {
 
-									final List<ProcessAreaActivityResponse> activities = entry.getValue()
-											.getActivities();
+					if (session.getMenu() != null && entry.getValue() != null) {
 
-									for (ProcessAreaActivityResponse activity : activities) {
+						final List<ProcessAreaActivityResponse> activities = entry
+								.getValue().getActivities();
 
-										ActivityMapping mapping = mappingHolder.get(
-														activity.getName(),
-														activity.getStyle());
+						for (ProcessAreaActivityResponse activity : activities) {
 
-										if (mapping != null) {
-											mapping.setTitle(activity.getTitle());
-											mappings.add(mapping);
-										}
+							ActivityMapping mapping = mappingHolder.get(
+									activity.getName(), activity.getStyle());
 
-									}
-
-								}
-								
+							if (mapping != null) {
+								mapping.setTitle(activity.getTitle());
+								mappings.add(mapping);
 							}
 
-							
-
-					//	}
+						}
 
 					}
 
-				});
+				}
+
+			}
+
+		});
 
 	}
 	
@@ -676,19 +652,8 @@ public abstract class ListActivityEx extends RoboListActivity implements
 				existingWidgets = new ArrayList<ExpanzFieldWidget>();
 			}
 		}
-		
-		
-		if (view.getClass().equals(TextViewEx.class)) {
-			TextViewEx label = (TextViewEx) view;
-			List<TextViewEx> existingLabels = fieldLabels.get(label.getFieldId());
 			
-			if(existingLabels == null) {
-				existingLabels = new ArrayList<TextViewEx>();
-			}
-			
-			existingLabels.add(label);
-			fieldLabels.put(label.getFieldId(), existingLabels);
-		}  else if (view instanceof ExpanzFieldWidget) {
+		if (view instanceof ExpanzFieldWidget) {
 			ExpanzFieldWidget exView = (ExpanzFieldWidget) view;
 			existingWidgets.add(exView);
 			fieldWidgets.put(exView.getFieldId(), existingWidgets);

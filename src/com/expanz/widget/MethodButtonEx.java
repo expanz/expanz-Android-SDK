@@ -152,68 +152,9 @@ public class MethodButtonEx extends Button {
 						new ServiceCallback<ActivityResponse>() {
 
 							public void completed(ActivityResponse activity) {
-								Map<String, List<TextViewEx>> labels = contextEx
-										.getFieldLabels();
-								Map<String, List<ExpanzFieldWidget>> fieldWidgetMap = contextEx
-										.getFieldWidgets();
 
-								for (FieldResponse field : activity.getFields()) {
-									List<TextViewEx> fieldLabels = labels
-											.get(field.getId());
+								contextEx.initFields(activity);
 
-									for (TextViewEx label : fieldLabels) {
-
-										if (label != null) {
-											if (label.isUseValue()) {
-												label.setText(field.getValue());
-											} else if (field.getLabel() != null) {
-												label.setText(field.getLabel());
-											}
-										}
-
-									}
-
-									List<ExpanzFieldWidget> fieldWidgets = fieldWidgetMap
-											.get(field.getId());
-
-									if (fieldWidgets != null) {
-
-										for (ExpanzFieldWidget fieldWidget : fieldWidgets) {
-
-											if (fieldWidget instanceof EditTextEx) {
-
-												EditTextEx editable = (EditTextEx) fieldWidget;
-
-												if (field.isNull()) {
-													editable.setText(null);
-												} else {
-													editable.setText(field
-															.getValue());
-												}
-
-												if (!field.isValid()) {
-
-													Message message = activity
-															.getMessage(field
-																	.getId());
-
-													editable.setError((message == null) ? null
-															: message
-																	.getMessage());
-												} else {
-													setError(null);
-												}
-											}
-
-										}
-
-									}
-								}
-
-								if (activity.hasMessage()) {
-									contextEx.displayMessages(activity
-											.getMessages());
-								}
 							}
 
 						});

@@ -1,24 +1,17 @@
 package com.expanz.widget;
 
-import java.util.List;
-import java.util.Map;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageButton;
 
-import com.expanz.ExpanzCommand;
 import com.expanz.R;
 import com.expanz.ServiceCallback;
 import com.expanz.app.ContextEx;
-import com.expanz.model.Message;
 import com.expanz.model.request.ActivityRequest;
 import com.expanz.model.request.MethodRequest;
 import com.expanz.model.response.ActivityResponse;
-import com.expanz.model.response.FieldResponse;
-import com.google.inject.Inject;
 
 /**
  * Widget that calls remote methods on the Expanz server.
@@ -128,66 +121,9 @@ public class ImageButtonEx extends ImageButton {
 						new ServiceCallback<ActivityResponse>() {
 
 							public void completed(ActivityResponse activity) {
-								Map<String, List<TextViewEx>> labels = contextEx
-										.getFieldLabels();
-								Map<String, List<ExpanzFieldWidget>> fieldWidgetMap = contextEx
-										.getFieldWidgets();
-
-								for (FieldResponse field : activity.getFields()) {
-									List<TextViewEx> fieldLabels = labels
-											.get(field.getId());
-
-									for (TextViewEx label : fieldLabels) {
-
-										if (label != null) {
-											if (label.isUseValue()) {
-												label.setText(field.getValue());
-											} else if (field.getLabel() != null) {
-												label.setText(field.getLabel());
-											}
-										}
-
-									}
-
-									List<ExpanzFieldWidget> fieldWidgets = fieldWidgetMap
-											.get(field.getId());
-
-									if (fieldWidgets != null) {
-
-										for (ExpanzFieldWidget fieldWidget : fieldWidgets) {
-
-											if (fieldWidget instanceof EditTextEx) {
-
-												EditTextEx editable = (EditTextEx) fieldWidget;
-
-												if (field.isNull()) {
-													editable.setText(null);
-												} else {
-													editable.setText(field
-															.getValue());
-												}
-
-												if (!field.isValid()) {
-
-													Message message = activity
-															.getMessage(field
-																	.getId());
-
-													editable.setError((message == null) ? null
-															: message
-																	.getMessage());
-												}
-											}
-
-										}
-
-									}
-								}
-
-								if (activity.hasMessage()) {
-									contextEx.displayMessages(activity
-											.getMessages());
-								}
+								
+								contextEx.initFields(activity);
+								
 							}
 
 						});

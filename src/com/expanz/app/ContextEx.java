@@ -45,11 +45,6 @@ public interface ContextEx {
 	void uploadImage(ImageDetails details);
 	
 	/**
-	 * The text labels for the current activity
-	 */
-	Map<String, List<TextViewEx>> getFieldLabels();
-	
-	/**
 	 * The ExpanzFieldWidget for the current activity
 	 */
 	Map<String, List<ExpanzFieldWidget>> getFieldWidgets();
