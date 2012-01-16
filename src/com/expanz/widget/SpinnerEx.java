@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.Spinner;
 
 import com.expanz.R;
@@ -241,6 +242,20 @@ public class SpinnerEx extends Spinner implements DataWidgetEx {
 	 */
 	public DataPublicationRequest toPublication() {
 		return composite.toPublication();
+	}
+
+	/**
+	 * Get the adapter for this widget
+	 */
+	public ListAdapter getListAdapter() {
+		return getListAdapter();
+	}
+
+	/**
+	 * REturn the context for this widget
+	 */
+	public String getContextObject() {
+		return composite.getContext();
 	}
 
 }

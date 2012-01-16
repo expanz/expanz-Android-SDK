@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -27,8 +28,6 @@ import com.expanz.app.ContextEx;
 import com.expanz.app.ExpanzConstants;
 import com.expanz.model.Message;
 import com.expanz.model.response.SessionResponse;
-import com.expanz.util.ActivityMappingHolder;
-import com.google.inject.Inject;
 
 /**
  * A composite widget that contains all the necessary widgets
@@ -169,7 +168,7 @@ public class DefaultLoginEx extends TableLayout {
 		
 		logoRow.addView(loginLogo);
 		
-		this.addView(logoRow);
+		addView(logoRow);
 		
 	}
 
@@ -253,8 +252,11 @@ public class DefaultLoginEx extends TableLayout {
 
 		passwordEdit = new EditText(context, attrs);
 		passwordEdit.setLayoutParams(passParams);
-		passwordEdit.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+		
+		//TODO note that some emulators/phones don't honor these... why?
+		passwordEdit.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 		passwordEdit.setTransformationMethod(new android.text.method.PasswordTransformationMethod().getInstance());
+		
 		passwordEdit.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
 		
 		passRow.addView(passwordEdit);

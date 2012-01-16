@@ -76,6 +76,8 @@ public class HTTPServiceAgent extends AsyncTask<RequestObject, Void, List<Respon
 	@Override
 	protected List<ResponseObject> doInBackground(RequestObject... requests) {
 		
+		long time = System.currentTimeMillis();
+		
 		List<ResponseObject> responses = new ArrayList<ResponseObject>();
 		
 		for(RequestObject<ResponseObject> request : requests) {
@@ -128,6 +130,7 @@ public class HTTPServiceAgent extends AsyncTask<RequestObject, Void, List<Respon
 				response.persist(responsePayload, application);
 				
 				response.getUri();
+				response.setRequestTime(time);
 				
 				Log.d(LOG_TAG + response.getClass().getSimpleName() + "-" + request.getClass().getSimpleName(),
 						responsePayload);

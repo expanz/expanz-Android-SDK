@@ -6,6 +6,7 @@ import static org.xmlpull.v1.XmlPullParser.START_TAG;
 import static org.xmlpull.v1.XmlPullParser.TEXT;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -71,52 +72,14 @@ public class GetSessionDataHandler implements XmlHandler<SessionResponse> {
 						if (type == START_TAG
 								&& Tags.PROCESS_AREA.equals(parser.getName())) {
 							
-							final ProcessAreaResponse processArea = new ProcessAreaResponse();
-							
-							processArea.setId(parser.getAttributeValue(null, "id")); 
-							processArea.setTitle(parser.getAttributeValue(null, "title")); 
-							
-							menu.addProcessArea(processArea);
-							
-							final int processAreaDepth = parser.getDepth();
-							
-							while (((type = parser.next()) != END_TAG || parser
-									.getDepth() > processAreaDepth) && type != END_DOCUMENT) {
-								if (type == START_TAG
-										&& Tags.ACTIVITY.equals(parser.getName())) {
-									
-									final ProcessAreaActivityResponse processAreaActivity = 
-											new ProcessAreaActivityResponse(parser.getAttributeValue("", "name"), 
-													parser.getAttributeValue("", "title"), 
-													parser.getAttributeValue("", "style"));
-									
-									processArea.getActivities().add(processAreaActivity);
-									
-								}
-							}
+							type = parseProcessArea(parser, menu);
 							
 						}
 						
 						if (type == START_TAG
 								&& Tags.ROLES.equals(parser.getName())) {
 							
-							final int rolesDepth = parser.getDepth();
-							
-							while (((type = parser.next()) != END_TAG || parser
-									.getDepth() > rolesDepth) && type != END_DOCUMENT) {
-								if (type == START_TAG
-										&& Tags.ROLE.equals(parser.getName())) {
-									
-									final RoleResponse role = new RoleResponse();
-									role.setId(parser.getAttributeValue("", "id"));
-									
-									if (type == TEXT) {
-										role.setValue(parser.getText());
-									}
-									
-									menu.getRoles().add(role);
-								}
-							}
+							type = parseRoles(parser, menu);
 						}
 						
 						messageHandler.parse(type, parser, session);
@@ -132,6 +95,76 @@ public class GetSessionDataHandler implements XmlHandler<SessionResponse> {
 		}
 		
 		return session;
+	}
+
+	/**
+	 * Parse the role elements
+	 * 
+	 * @param parser
+	 * @param menu
+	 * @return
+	 * @throws XmlPullParserException
+	 * @throws IOException
+	 */
+	private int parseRoles(XmlPullParser parser, final MenuResponse menu)
+			throws XmlPullParserException, IOException {
+		int type;
+		final int rolesDepth = parser.getDepth();
+		
+		while (((type = parser.next()) != END_TAG || parser
+				.getDepth() > rolesDepth) && type != END_DOCUMENT) {
+			if (type == START_TAG
+					&& Tags.ROLE.equals(parser.getName())) {
+				
+				final RoleResponse role = new RoleResponse();
+				role.setId(parser.getAttributeValue("", "id"));
+				
+				if (type == TEXT) {
+					role.setValue(parser.getText());
+				}
+				
+				menu.getRoles().add(role);
+			}
+		}
+		return type;
+	}
+
+	/**
+	 * Parse the process area elements
+	 * 
+	 * @param parser
+	 * @param menu
+	 * @return
+	 * @throws XmlPullParserException
+	 * @throws IOException
+	 */
+	private int parseProcessArea(XmlPullParser parser, final MenuResponse menu)
+			throws XmlPullParserException, IOException {
+		int type;
+		final ProcessAreaResponse processArea = new ProcessAreaResponse();
+		
+		processArea.setId(parser.getAttributeValue(null, "id")); 
+		processArea.setTitle(parser.getAttributeValue(null, "title")); 
+		
+		menu.addProcessArea(processArea);
+		
+		final int processAreaDepth = parser.getDepth();
+		
+		while (((type = parser.next()) != END_TAG || parser
+				.getDepth() > processAreaDepth) && type != END_DOCUMENT) {
+			if (type == START_TAG
+					&& Tags.ACTIVITY.equals(parser.getName())) {
+				
+				final ProcessAreaActivityResponse processAreaActivity = 
+						new ProcessAreaActivityResponse(parser.getAttributeValue("", "name"), 
+								parser.getAttributeValue("", "title"), 
+								parser.getAttributeValue("", "style"));
+				
+				processArea.getActivities().add(processAreaActivity);
+				
+			}
+		}
+		return type;
 	}
 
 	/**

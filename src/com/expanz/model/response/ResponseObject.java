@@ -18,6 +18,12 @@ public abstract class ResponseObject {
 	protected Uri uri;
 	
 	/**
+	 * A simple check to avoid most race conditions
+	 * Note: this is a temporary measure and should be improved
+	 */
+	private long requestTime;
+	
+	/**
 	 * holds any messages returned in the service response
 	 */
 	private Map<String, Message> messages = new HashMap<String, Message>();
@@ -104,6 +110,24 @@ public abstract class ResponseObject {
 	 */
 	public Uri getUri() {
 		return uri;
+	}
+
+	/**
+	 * The time of the request for the response
+	 * 
+	 * @return the time of the request
+	 */
+	public long getRequestTime() {
+		return requestTime;
+	}
+
+	/**
+	 * Return the time the corresponding request was made
+	 * 
+	 * @param requestTime
+	 */
+	public void setRequestTime(long requestTime) {
+		this.requestTime = requestTime;
 	}
 
 }

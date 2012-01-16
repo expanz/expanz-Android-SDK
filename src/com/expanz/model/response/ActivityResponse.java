@@ -21,7 +21,7 @@ import com.expanz.model.request.DataPublicationRequest;
 public class ActivityResponse extends ResponseObject {
 	
 	/**
-	 * The hande of the newly created ativity
+	 * The handle of the newly created activity
 	 */
 	private String handle;
 	

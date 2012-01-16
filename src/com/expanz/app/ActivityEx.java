@@ -22,11 +22,14 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.Toast;
 
 import com.expanz.ExpanzApplication;
@@ -35,14 +38,22 @@ import com.expanz.ServiceCallback;
 import com.expanz.model.Message;
 import com.expanz.model.entity.Activities;
 import com.expanz.model.entity.ImageDetails;
+import com.expanz.model.request.ActivityRequest;
+import com.expanz.model.request.ContextMenuRequest;
+import com.expanz.model.request.ContextRequest;
 import com.expanz.model.request.CreateActivityRequest;
 import com.expanz.model.request.CreateSessionRequest;
 import com.expanz.model.request.DataPublicationRequest;
 import com.expanz.model.request.GetSessionDataRequest;
+import com.expanz.model.request.MenuActionRequest;
+import com.expanz.model.request.MethodRequest;
 import com.expanz.model.response.ActivityRequestResponse;
 import com.expanz.model.response.ActivityResponse;
+import com.expanz.model.response.ContextMenuResponse;
 import com.expanz.model.response.Data;
+import com.expanz.model.response.DataRow;
 import com.expanz.model.response.FieldResponse;
+import com.expanz.model.response.MenuItemResponse;
 import com.expanz.model.response.ProcessAreaActivityResponse;
 import com.expanz.model.response.ProcessAreaResponse;
 import com.expanz.model.response.SessionResponse;
@@ -50,12 +61,12 @@ import com.expanz.util.ActivityMapping;
 import com.expanz.util.ActivityMappingHolder;
 import com.expanz.util.ImageCapturer;
 import com.expanz.webservice.ActivityHandler;
+import com.expanz.widget.ContextMenuAware;
 import com.expanz.widget.DataWidgetEx;
 import com.expanz.widget.EditTextEx;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.ImageViewEx;
 import com.expanz.widget.ListViewEx;
-import com.expanz.widget.TextViewEx;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -105,6 +116,11 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	private Map<String, DataWidgetEx> dataWidgets = new HashMap<String, DataWidgetEx>();
 	
 	/**
+	 * Widgets that are able to display a context menu
+	 */
+	private List<ContextMenuAware> contextMenuAwareWidgets = new ArrayList<ContextMenuAware>();
+	
+	/**
 	 * the root view for this activity, need so we can recurse child elements
 	 */
 	private ViewGroup rootLayout;
@@ -148,6 +164,29 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	private Set<String> includedFields = new HashSet<String>();
 	
 	/**
+	 * for context menu pertaining to a given row
+	 */
+	private ContextMenuResponse contextMenuResponse;
+	
+	/**
+	 * Holds state of context menu. 
+	 * There is no clean way of adding a context menu
+	 * to widgets when the menu items happen asynchronously
+	 * so this flag is used to determine whether to call back 
+	 * and display the menu or retrieve the data from 
+	 * the Expanz server
+	 */
+	private boolean contextMenuInitiated = false;
+	
+	/**
+	 * As above used for Context Menu object. 
+	 * 
+	 * TODO It would be nicer if the menu response from
+	 * the server contained this. 
+	 */
+	private String contextMenuContextObject;
+	
+	/**
 	 * A default progress dialog
 	 */
 	private ProgressDialog progress;
@@ -185,10 +224,17 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 
 	}
 
+	/**
+	 * Get the field widgets used in this activity
+	 */
 	public Map<String, List<ExpanzFieldWidget>> getFieldWidgets() {
 		return fieldWidgets;
 	}
 	
+	/**
+	 * Return a reference to this object for inner classes 
+	 * @return
+	 */
 	public Context getContextRef() {
 		return this;
 	}
@@ -360,6 +406,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	 */
 	public void initFields(ActivityResponse activity) {
 		
+	
 		if(activity.getUri() != null) {
 			activityUri = activity.getUri();
 		}
@@ -400,7 +447,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 
 		if (activityRequest != null) {
 
-			mappingHolder.get(
+			ActivityMapping mapping = mappingHolder.get(
 							activityRequest.getId(),
 							activityRequest.getStyle());
 
@@ -418,7 +465,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	}
 	
 	
-
+	/**{@inheritDoc} */
 	@Override
 	protected void onPause() {
 		
@@ -432,10 +479,14 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 			editor.commit();
 		}
 		
+		for(ContextMenuAware contextAware : contextMenuAwareWidgets) {
+			unregisterForContextMenu(contextAware.getView());
+		}
+		
 		super.onPause();
 	}
 
-	
+	/**{@inheritDoc} */
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putBoolean(ExpanzConstants.NOT_NEW, true);
@@ -608,7 +659,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 		} else if (view instanceof ListViewEx) {
 			ListViewEx listView = (ListViewEx) view;
 			View rowView = getLayoutInflater().inflate(listView.getRowLayout(), null, true);
-			recurseChildren(rowView, listView.getModelContextObject());
+			recurseChildren(rowView, listView.getContextObject());
 		}
 		
 		if(view instanceof ExpanzFieldWidget) {
@@ -624,6 +675,15 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 			DataWidgetEx dataWidget = (DataWidgetEx) view;
 			
 			dataWidgets.put(dataWidget.getDataId(), dataWidget);
+		}
+		
+		if(view instanceof ContextMenuAware) {
+			ContextMenuAware contextMenuAware = (ContextMenuAware) view;
+			
+			if(contextMenuAware.isMenuEnabled()) {
+				contextMenuAwareWidgets.add(contextMenuAware);
+				registerForContextMenu(contextMenuAware.getView());
+			}
 		}
 	}
 	
@@ -725,6 +785,7 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 		
 	}
 	
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -785,6 +846,153 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
 	    }
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onCreateContextMenu(final ContextMenu menu, final View v, ContextMenuInfo menuInfo) {
+		
+		if(contextMenuInitiated) {
+			contextMenuInitiated = false;
+		
+			if (contextMenuResponse != null) {
+				
+				int idx = 0;
+				
+				for (MenuItemResponse item : contextMenuResponse.getItems()) {
+					menu.add(Menu.NONE, idx++, idx, item.getText());
+				}
+				
+				super.onCreateContextMenu(menu, v, menuInfo);
+			}
+			
+			
+		} else {
+			asyncContextMenu(menu, v, menuInfo);
+		}
+		
+		
+	}
+	
+	/**
+	 * Maybe a hack, can't find a better way of asynchronously updating
+	 * the context menu. This method calls back to onCreateContextMenu.
+	 * Maybe this is how google anticipate it should be done but can't
+	 * find any documentation detailing how to handle async updates of 
+	 * the context menu. 
+	 * 
+	 * 
+	 * @param menu the menu to add items to
+	 * @param v the contextual view
+	 * @param menuInfo the menu details
+	 */
+	private void asyncContextMenu(final ContextMenu menu, final View v, ContextMenuInfo menuInfo) {
+		
+		DataWidgetEx dataWidget = null;
+		
+		if(v instanceof DataWidgetEx) {
+			dataWidget = (DataWidgetEx) v;
+		} else { 
+			return;
+		}
+		
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+
+		DataRow data = (DataRow) dataWidget.getListAdapter().getItem(info.position);
+		
+		ActivityRequest activity = new ActivityRequest(activityHandle, sessionHandle);
+		
+		ContextRequest context = new ContextRequest();
+		context.setType(data.getType());
+		context.setId(data.getId());
+		
+		activity.setContext(context);
+		
+		if(data.getParent().getContextMenuMethod() != null) {
+			MethodRequest method = new MethodRequest();
+			method.setName(data.getParent().getContextMenuMethod());
+			method.setContextObject(data.getParent().getContextObject());
+			contextMenuContextObject = method.getContextObject();
+			activity.addMethod(method);
+		} else {
+			
+			ContextMenuRequest contextMenu = new ContextMenuRequest();
+			contextMenu.setContextObject(dataWidget.getContextObject());
+			contextMenuContextObject = contextMenu.getContextObject();
+			activity.setContextMenu(contextMenu);
+		}
+		
+		expanzCommand.execute(activity,
+				new ServiceCallback<ActivityResponse>() {
+
+					public void completed(ActivityResponse response) {
+						contextMenuResponse = response.getContextMenu();
+
+						if (contextMenuResponse != null) {
+							
+							contextMenuInitiated = true;
+							openContextMenu(v);
+						
+						}
+					
+					}
+
+				});
+		
+	}
+	
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean onContextItemSelected(final MenuItem item) {
+		
+		if (contextMenuResponse == null) {
+			return false;
+		}
+			
+		String action = null;
+		
+		
+		for (MenuItemResponse response : contextMenuResponse.getItems()) {
+			if(item.getTitle().equals(response.getText())) {
+				action = response.getAction();
+			}
+		}
+		
+		if(action == null || contextMenuContextObject == null) {
+			return false;
+		}
+	
+		
+		MenuActionRequest menuAction = new MenuActionRequest();
+		
+		menuAction.setAction(action);
+		menuAction.setContext(contextMenuContextObject);
+		
+		ActivityRequest request = new ActivityRequest(activityHandle, sessionHandle);
+		
+		request.setMenuAction(menuAction);
+			
+		expanzCommand.execute(request,
+					new ServiceCallback<ActivityResponse>() {
+
+						public void completed(ActivityResponse response) {
+							
+							initFields(response);
+							
+						}
+
+					});
+			
+		
+		return true;
+	}
+	
+	/**
+	 * Show a simple progress dialog
+	 */
 	public void showProgress(String message) {
 		
 		if(isFinishing()) {
@@ -802,6 +1010,9 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
         
     }
 
+	/**
+	 * Hide progress dialog if showing
+	 */
     public void hideProgress() {
     	
     	if(isFinishing()) {
@@ -813,10 +1024,18 @@ public abstract class ActivityEx extends RoboActivity implements MessageListener
         }
     }
 
+    /**
+     * Returns the mapping holder, available here as difficult to inject 
+     * things into widgets
+     */
 	public ActivityMappingHolder getMappingHolder() {
 		return mappingHolder;
 	}
 	
+	/**
+	 * Returns the command, available here as difficult to inject 
+     * things into widgets
+	 */
 	public ExpanzCommand getCommand() {
 		return expanzCommand;
 	}

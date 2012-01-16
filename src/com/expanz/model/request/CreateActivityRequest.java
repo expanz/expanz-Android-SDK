@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.expanz.model.response.ActivityResponse;
-import com.expanz.webservice.CreateActivityHandler;
+import com.expanz.webservice.ActivityHandler;
 import com.expanz.webservice.XmlHandler;
 
 /**
@@ -52,7 +52,7 @@ public class CreateActivityRequest extends RequestObject<ActivityResponse> {
 	/**
 	 * Handle parsing response XML
 	 */
-	private static final CreateActivityHandler handler = new CreateActivityHandler();
+	private static final ActivityHandler handler = new ActivityHandler();
 	
 	/**
 	 * Static factory method for the creation of a CreateActivityRequest with the following params
@@ -285,8 +285,7 @@ public class CreateActivityRequest extends RequestObject<ActivityResponse> {
 			addStringAttribute(xml, "populateMethod", publication.getPopulateMethod());
 			addStringAttribute(xml, "contextObject", publication.getContext());
 			addBooleanAttribute(xml, "autoPopulate", publication.getAutoPopulate());
-			//TODO this should take a boolean like other booleans (0 or 1)
-			addStringAttribute(xml, "useThumbNailImages", publication.isUseThumbnails() ? "true" : "false");
+			addBooleanAttribute(xml, "useThumbNailImages", publication.isUseThumbnails());
 			closeSimpleElementWithAttributes(xml);
 			
 		}

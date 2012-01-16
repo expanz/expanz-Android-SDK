@@ -8,9 +8,9 @@ import com.expanz.ExpanzCommand;
 import com.expanz.model.Message;
 import com.expanz.model.entity.ImageDetails;
 import com.expanz.model.response.ActivityResponse;
+import com.expanz.model.response.ContextMenuResponse;
 import com.expanz.util.ActivityMappingHolder;
 import com.expanz.widget.ExpanzFieldWidget;
-import com.expanz.widget.TextViewEx;
 
 /**
  * A common interface that is to be implemented by any Expanz 'Android' activity
@@ -83,5 +83,12 @@ public interface ContextEx {
 	 * @param response the activity response
 	 */
 	void initFields(ActivityResponse response);
+	
+	/**
+	 * Set the current menu Response
+	 * 
+	 * @param contextMenuResponse
+	 */
+	//void setCurrentContextMenu(ContextMenuResponse contextMenuResponse);
 	
 }

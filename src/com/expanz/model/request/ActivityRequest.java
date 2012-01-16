@@ -30,6 +30,11 @@ public class ActivityRequest extends RequestObject<ActivityResponse> {
 	private ContextRequest context;
 	
 	/**
+	 * Context menu object of the request
+	 */
+	private ContextMenuRequest contextMenu;
+	
+	/**
 	 * Call methods
 	 */
 	private List<MethodRequest> methods = new ArrayList<MethodRequest>();
@@ -138,6 +143,14 @@ public class ActivityRequest extends RequestObject<ActivityResponse> {
 	public void setContext(ContextRequest context) {
 		this.context = context;
 	}
+	
+	/**
+	 * Set the Context Menu element for the request 
+	 * @param contextMenu the context menu
+	 */
+	public void setContextMenu(ContextMenuRequest contextMenu) {
+		this.contextMenu = contextMenu;
+	}
 
 	/**
 	 * Add the xml for the entire activity request
@@ -152,6 +165,7 @@ public class ActivityRequest extends RequestObject<ActivityResponse> {
 		closeParentElementWithAttributes(xml);
 		
 		addContext(xml);
+		addContextMenu(xml);
 		addMenuAction(xml);
 		addMethods(xml);
 		addDeltas(xml);
@@ -175,6 +189,21 @@ public class ActivityRequest extends RequestObject<ActivityResponse> {
 			addStringAttribute(xml, "id", context.getId());
 			addStringAttribute(xml, "Type", context.getType());
 			addStringAttribute(xml, "contextObject", context.getContext());
+			closeSimpleElementWithAttributes(xml);
+		}
+		
+	}
+	
+	/**
+	 * Add the context element
+	 * 
+	 * @param xml the buffer to add the new element
+	 */
+	private void addContextMenu(StringBuilder xml) {
+		
+		if(contextMenu != null) {
+			startElementWithAttributes(xml, "ContextMenu");
+			addStringAttribute(xml, "contextObject", contextMenu.getContextObject());
 			closeSimpleElementWithAttributes(xml);
 		}
 		

@@ -22,17 +22,17 @@ import com.expanz.model.response.ActivityResponse;
 import com.expanz.model.response.Data;
 import com.expanz.model.response.DataRow;
 
-public class ListViewEx extends ListView implements DataWidgetEx {
-
-	/**
-	 * The context object associated with this list view
-	 */
-	private String modelContextObject;
+public class ListViewEx extends ListView implements DataWidgetEx, ContextMenuAware {
 
 	/**
 	 * The row layout identifier
 	 */
 	private int rowLayout;
+	
+	/**
+	 * Is the contextMenu enabled
+	 */
+	private boolean menuEnabled;
 
 	/**
 	 * Defines common DataWidgetEx properties
@@ -97,14 +97,12 @@ public class ListViewEx extends ListView implements DataWidgetEx {
 		TypedArray a = getContext().obtainStyledAttributes(attrs,
 				R.styleable.BaseViewEx);
 
-		modelContextObject = a.getString(R.styleable.BaseViewEx_context_object);
+		composite.setContext(a.getString(R.styleable.BaseViewEx_context_object));
 
-		if (modelContextObject == null) {
+		if (composite.getContext() == null) {
 			throw new RuntimeException(
 					"context_object attribute must be defined");
 		}
-
-		composite.setContext(modelContextObject);
 
 		a = getContext().obtainStyledAttributes(attrs, R.styleable.ListViewEx);
 
@@ -149,6 +147,12 @@ public class ListViewEx extends ListView implements DataWidgetEx {
 			e.printStackTrace();
 			throw new RuntimeException("unable to find layout" + fileName);
 		}
+		
+		a = getContext()
+				.obtainStyledAttributes(attrs, R.styleable.ContextMenuAware);
+		
+		menuEnabled = (a.getBoolean(R.styleable.ContextMenuAware_menu_enabled,
+				false));
 
 	}
 
@@ -159,12 +163,14 @@ public class ListViewEx extends ListView implements DataWidgetEx {
 
 		final ContextEx contextEx = (ContextEx) getContext();
 
+		//TODO this will need to allow individual widgets within a list
+		//to be selected independently 
 		setOnItemClickListener(new OnItemClickListener() {
 
 			public void onItemClick(AdapterView<?> adapter, View view,
 					int position, long id) {
 
-				DataRow data = (DataRow) getAdapterRef().getItem(position);
+				DataRow data = (DataRow) getAdapter().getItem(position);
 
 				ContextRequest context = new ContextRequest();
 				context.setId(data.getId());
@@ -196,14 +202,6 @@ public class ListViewEx extends ListView implements DataWidgetEx {
 
 	}
 
-	/**
-	 * Get the context object associated with this View.
-	 * 
-	 * @return the context object
-	 */
-	public String getModelContextObject() {
-		return modelContextObject;
-	}
 
 	/**
 	 * Loads the data into the ListViews adapter
@@ -238,8 +236,30 @@ public class ListViewEx extends ListView implements DataWidgetEx {
 		return composite.toPublication();
 	}
 
-	private ListAdapter getAdapterRef() {
+	/**
+	 * Get the adapter for this widget's data
+	 */
+	public ListAdapter getListAdapter() {
 		return getAdapter();
+	}
+
+	/**
+	 * Get the context object for this widget
+	 */
+	public String getContextObject() {
+		return composite.getContext();
+	}
+
+	
+	public boolean isMenuEnabled() {
+		return menuEnabled;
+	}
+
+	/**
+	 * Returns the view of this ContextAwareWidget 
+	 */
+	public View getView() {
+		return this;
 	}
 
 }

@@ -16,8 +16,8 @@ import com.expanz.model.entity.Activities;
 import com.expanz.model.entity.Sessions;
 
 /**
- * Default Data Access Object. The class defines common 
- * operations on the 
+ * Default Data Access Object. This class defines common 
+ * persistence operations on the model.
  *
  */
 public class DefaultContentProvider extends ContentProvider {

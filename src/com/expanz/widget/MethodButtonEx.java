@@ -1,24 +1,17 @@
 package com.expanz.widget;
 
-import java.util.List;
-import java.util.Map;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Button;
 
-import com.expanz.ExpanzCommand;
 import com.expanz.R;
 import com.expanz.ServiceCallback;
 import com.expanz.app.ContextEx;
-import com.expanz.model.Message;
 import com.expanz.model.request.ActivityRequest;
 import com.expanz.model.request.MethodRequest;
 import com.expanz.model.response.ActivityResponse;
-import com.expanz.model.response.FieldResponse;
-import com.google.inject.Inject;
 
 public class MethodButtonEx extends Button {
 	

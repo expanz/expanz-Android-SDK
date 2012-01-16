@@ -25,6 +25,9 @@
 	<declare-styleable name="TextViewEx">
     	<attr name="use_value" format="boolean" />
 	</declare-styleable>
+	<declare-styleable name="ContextMenuAware">
+    	<attr name="menu_enabled" format="boolean" />
+	</declare-styleable>
 	<declare-styleable name="BaseViewEx">
 		<attr name="batch_mode" format="boolean" />
 		<attr name="field_id" format="string" />

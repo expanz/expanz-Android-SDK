@@ -61,6 +61,7 @@ import com.expanz.util.ActivityMapping;
 import com.expanz.util.ActivityMappingHolder;
 import com.expanz.util.ImageCapturer;
 import com.expanz.webservice.ActivityHandler;
+import com.expanz.widget.ContextMenuAware;
 import com.expanz.widget.EditTextEx;
 import com.expanz.widget.ExpanzFieldWidget;
 import com.expanz.widget.TextViewEx;
@@ -99,6 +100,11 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	 * any field widget views that exists as a child of the root view for this activity
 	 */
 	private Map<String, List<ExpanzFieldWidget>> fieldWidgets = new HashMap<String, List<ExpanzFieldWidget>>();
+	
+	/**
+	 * Widgets that are able to display a context menu
+	 */
+	private List<ContextMenuAware> contextMenuAwareWidgets = new ArrayList<ContextMenuAware>();
 		
 	/**
 	 * the mappings for menu items
@@ -113,7 +119,17 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	/**
 	 * for context menu pertaining to a given row
 	 */
-	private ContextMenuResponse contextMenu;
+	private ContextMenuResponse contextMenuResponse;
+	
+	/**
+	 * Holds state of context menu. 
+	 * There is no clean way of adding a context menu
+	 * to widgets when the menu items happen asynchronously
+	 * so this flag is used to determine whether to call back 
+	 * and display the menu or retrieve the data from 
+	 * the Expanz server
+	 */
+	private boolean contextMenuInitiated = false;
 	
 	/**
 	 * the headers and footers of the listview, used so we can dynamically 
@@ -276,6 +292,12 @@ public abstract class ListActivityEx extends RoboListActivity implements
 			editor.commit();
 		}
 		
+		for(ContextMenuAware contextAware : contextMenuAwareWidgets) {
+			unregisterForContextMenu(contextAware.getView());
+		}
+		
+		unregisterForContextMenu(getListView());
+		
 		super.onPause();
 	}
 
@@ -374,7 +396,7 @@ public abstract class ListActivityEx extends RoboListActivity implements
 
 		if (activityRequest != null) {
 
-			mappingHolder.get(
+			ActivityMapping mapping = mappingHolder.get(
 							activityRequest.getId(),
 							activityRequest.getStyle());
 
@@ -623,6 +645,11 @@ public abstract class ListActivityEx extends RoboListActivity implements
 
 	}
 	
+	/**
+	 * Recurse each parent view and extract widgets.
+	 * 
+	 * @param view the parent
+	 */
 	private void recurseChildren(View view) {
 		
 		if(view == null) {
@@ -662,9 +689,24 @@ public abstract class ListActivityEx extends RoboListActivity implements
 		if(view instanceof ExpanzFieldWidget) {
 			rowFields.add(((ExpanzFieldWidget)view).getFieldId());
 		}
+		
+		if(view instanceof ContextMenuAware) {
+			
+			ContextMenuAware contextMenuAware = (ContextMenuAware) view;
+			
+			if(contextMenuAware.isMenuEnabled()) {
+				contextMenuAwareWidgets.add(contextMenuAware);
+				registerForContextMenu(contextMenuAware.getView());
+			}		
+		}
 	
 	}
 	
+	/**
+	 * Recurse the items of the row view
+	 * 
+	 * @param view the view for the individual rows
+	 */
 	private void recurseRowView(View view) {
 		
 		if(view == null) {
@@ -825,7 +867,45 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	 */
 	@Override
 	public void onCreateContextMenu(final ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		
+		if(contextMenuInitiated) {
+			contextMenuInitiated = false;
+		
+			if (contextMenuResponse != null) {
+				
+				int idx = 0;
+				
+				for (MenuItemResponse item : contextMenuResponse.getItems()) {
+					menu.add(Menu.NONE, idx++, idx, item.getText());
+				}
+				
+				super.onCreateContextMenu(menu, v, menuInfo);
+			}
+			
+			
+		} else {
+			asyncContextMenu(menu, v, menuInfo);
+		}
 
+		
+
+	}
+
+	/**
+	 * Maybe a hack, can't find a better way of asynchronously updating
+	 * the context menu. This method calls back to onCreateContextMenu.
+	 * Maybe this is how google anticipate it should be done but can't
+	 * find any documentation detailing how to handle async updates of 
+	 * the context menu. 
+	 * 
+	 * 
+	 * @param menu the menu to add items to
+	 * @param v the contextual view
+	 * @param menuInfo the menu details
+	 */
+	private void asyncContextMenu(final ContextMenu menu, final View v,
+			ContextMenuInfo menuInfo) {
+		
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
 		DataRow data = (DataRow) getListAdapter().getItem(info.position - headers.size());
@@ -848,19 +928,14 @@ public abstract class ListActivityEx extends RoboListActivity implements
 				new ServiceCallback<ActivityResponse>() {
 
 					public void completed(ActivityResponse response) {
-						contextMenu = response.getContextMenu();
+						contextMenuResponse = response.getContextMenu();
 
-						if (contextMenu != null) {
-							int idx = 0;
-							for (MenuItemResponse item : contextMenu.getItems()) {
-								menu.add(Menu.NONE, idx++, idx, item.getText());
-							}
-						}
+						openContextMenu(v);
 					}
 
 				});
-
 	}
+
 
 	/**
 	 * {@inheritDoc}
@@ -874,9 +949,9 @@ public abstract class ListActivityEx extends RoboListActivity implements
 		
 		int menuItemIndex = item.getItemId();
 		
-		if(contextMenu != null && menuItemIndex < contextMenu.getItems().size()) {
+		if(contextMenuResponse != null && menuItemIndex < contextMenuResponse.getItems().size()) {
 			
-			final MenuItemResponse menuItem = contextMenu.getItems().get(menuItemIndex);
+			final MenuItemResponse menuItem = contextMenuResponse.getItems().get(menuItemIndex);
 			
 			ContextRequest context = new ContextRequest();
 			context.setId(data.getId());
@@ -887,8 +962,8 @@ public abstract class ListActivityEx extends RoboListActivity implements
 			method.setName(menuItem.getAction());
 			method.setContextObject(data.getParent().getContextObject());
 			
-			MenuActionRequest menuAction = new MenuActionRequest();
-			menuAction.setDefaultAction(true);
+//			MenuActionRequest menuAction = new MenuActionRequest();
+//			menuAction.setDefaultAction(true);
 			
 			ActivityRequest request = new ActivityRequest(activityHandle, sessionHandle);
 			request.setContext(context);
@@ -991,6 +1066,9 @@ public abstract class ListActivityEx extends RoboListActivity implements
 	    }
 	}
 	
+	/**
+	 * Show a basic progress dialog
+	 */
 	public void showProgress(String message) {
 		
 		if(isFinishing()) {
@@ -1006,6 +1084,9 @@ public abstract class ListActivityEx extends RoboListActivity implements
         progress.show();
     }
 
+	/**
+	 * Hide the progress dialog if showing
+	 */
     public void hideProgress() {
     	
     	if(isFinishing()) {
@@ -1017,10 +1098,18 @@ public abstract class ListActivityEx extends RoboListActivity implements
         }
     }
     
-    public ActivityMappingHolder getMappingHolder() {
+    /**
+     * Returns the mapping holder, available here as difficult to inject 
+     * things into widgets
+     */
+	public ActivityMappingHolder getMappingHolder() {
 		return mappingHolder;
 	}
 	
+	/**
+	 * Returns the command, available here as difficult to inject 
+     * things into widgets
+	 */
 	public ExpanzCommand getCommand() {
 		return expanzCommand;
 	}
